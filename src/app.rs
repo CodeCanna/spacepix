@@ -2,7 +2,7 @@ use crate::Urls;
 use eframe::egui::{Color32, FontId, Id, RichText};
 
 const URL: &str =
-    "https://api.nasa.gov/planetary/apod?api_key=dHoShRN6KfreJoy5hrA946bifL6tb3amyotVyAQt";
+    "https://api.nasa.gov/planetary/apod?api_key=";
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, PartialEq)]
 enum Views {
@@ -60,7 +60,7 @@ impl SpacePixUi {
     #[allow(dead_code)]
     pub async fn get_pic_data() -> Result<(String, String), reqwest::Error> {
         let data = reqwest::get(
-            "https://api.nasa.gov/planetary/apod?api_key=dHoShRN6KfreJoy5hrA946bifL6tb3amyotVyAQt",
+            "https://api.nasa.gov/planetary/apod?api_key=",
         )
         .await?
         .text()
