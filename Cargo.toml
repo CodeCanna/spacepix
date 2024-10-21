@@ -1,0 +1,27 @@
+[package]
+name = "spacepix"
+authors = ["Mark A Waid <mark.waid94@gmail.com>"]
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.19", features = ["derive"] }
+egui = "0.29.1"
+http = "1.1.0"
+json = "0.12.4"
+serde = { version = "1.0.210", features = ["derive"] }
+tokio = { version = "1.40.0", features = ["full"] }
+eframe = { version = "0.29", default-features = false, features = [
+    "accesskit",     # Make egui compatible with screen readers. NOTE: adds a lot of dependencies.
+    "default_fonts", # Embed the default egui fonts.
+    "glow",          # Use the glow rendering backend. Alternative: "wgpu".
+    "persistence",   # Enable restoring app state when restarting the app.
+] }
+log = "0.4"
+reqwest = { version = "0.12.8", features = ["blocking"] }
+egui_extras = { version = "0.29.1", features = ["all_loaders"] }
+image = { version = "0.25.4", features = ["jpeg", "png"] }
+
+# native:
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+env_logger = "0.11"
