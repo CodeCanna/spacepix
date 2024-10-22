@@ -1,4 +1,5 @@
 #[derive(Clone)]
+#[derive(serde::Deserialize, serde::Serialize)]
 pub struct Urls {
     pub apod: String,
     pub neows: String,
