@@ -1,8 +1,8 @@
 use crate::Urls;
-use eframe::egui::{Color32, FontId, Id, RichText};
+use eframe::egui::{FontId, Id, RichText};
 
-const URL: &str =
-    "https://api.nasa.gov/planetary/apod?api_key=";
+const URL: &str = "https://api.nasa.gov/planetary/apod?api_key=rMRMa11aOjnpaIaeqeCcOV9EeDERZbfAX9cnLRGn";
+    //format!("");
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, PartialEq)]
 enum Views {
@@ -16,8 +16,10 @@ enum Views {
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
 pub struct SpacePixUi {
+    urls: Urls,
     current_view: Views,
     image_url: String,
+    image_cache: Option<(String, String)>,
     image_desc: String,
 }
 
@@ -26,6 +28,7 @@ impl Default for SpacePixUi {
         Self {
             current_view: Views::APOD,
             image_url: String::from("Beans"), // This should point to some default logo file for now
+            image_cache: None,
             image_desc: String::from("Beans"), // This can say something like: "Welcome to spacepix!"
         }
     }
@@ -75,24 +78,32 @@ impl SpacePixUi {
         Ok(image_data)
     }
 
-    pub fn get_pic_data_blocking() -> Result<(String, String), reqwest::Error> {
-        let data = reqwest::blocking::get(URL)?
-            .text()
-            .expect("Failed to retrieve image from API...");
-
-        let json_object = json::parse(&data).expect("Failed to parse image data...");
-        let image_data: (String, String) = (
-            json_object["hdurl"].to_string(),
-            json_object["explanation"].to_string(),
-        );
-
-        Ok(image_data)
+    pub fn get_pic_data_blocking(&mut self) -> Result<(String, String), reqwest::Error> {
+        match &self.image_cache {
+            Some(cache) => Ok(cache.clone()),
+            None => {
+                let data = reqwest::blocking::get(URL)?
+                    .text()
+                    .expect("Failed to retrieve image from API...");
+        
+                let json_object = json::parse(&data).expect("Failed to parse image data...");
+                let image_data: (String, String) = (
+                    json_object["hdurl"].to_string(),
+                    json_object["explanation"].to_string(),
+                );
+        
+                self.image_cache = Some(image_data.clone()); // Cache the image
+        
+                Ok(image_data)
+            }
+        }
     }
 }
 
 impl eframe::App for SpacePixUi {
+    #[allow(unused_variables)]
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        let image_data = self::SpacePixUi::get_pic_data_blocking().expect("Failed to get image...");
+        let image_data = self.get_pic_data_blocking().expect("Failed to get image...");
         self.image_desc = image_data.1;
         self.image_url = image_data.0;
         let image = egui::Image::from_uri(self.image_url.clone()); // I had to clone here for some reason...
