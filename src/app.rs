@@ -1,8 +1,8 @@
 use crate::Urls;
 use eframe::egui::{FontId, Id, RichText};
+use std::path::Path;
 
-const URL: &str = "https://api.nasa.gov/planetary/apod?api_key=rMRMa11aOjnpaIaeqeCcOV9EeDERZbfAX9cnLRGn";
-    //format!("");
+// const URL: &str = "https://api.nasa.gov/planetary/apod?api_key=rMRMa11aOjnpaIaeqeCcOV9EeDERZbfAX9cnLRGn";
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, PartialEq)]
 enum Views {
@@ -16,7 +16,7 @@ enum Views {
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
 pub struct SpacePixUi {
-    urls: Urls,
+    url: String,
     current_view: Views,
     image_url: String,
     image_cache: Option<(String, String)>,
@@ -26,6 +26,7 @@ pub struct SpacePixUi {
 impl Default for SpacePixUi {
     fn default() -> Self {
         Self {
+            url: Urls::urls().apod,
             current_view: Views::APOD,
             image_url: String::from("Beans"), // This should point to some default logo file for now
             image_cache: None,
@@ -48,8 +49,13 @@ impl SpacePixUi {
         Default::default()
     }
 
-    pub fn load_apod_view(&mut self) {
+    pub fn load_apod_view(&mut self, saucy_path: &Path) {
+        let sauce = Urls::get_secret_sauce(&saucy_path.to_str().unwrap()).expect("Failed to get the sauuuuuuuce!!!");
+        let urls = Urls::make_secret_sauce(sauce.as_str());
+
+        self.url = urls.unwrap().apod;
         println!("We are currently in APOD view");
+        println!("{}", self.url);
     }
 
     pub fn load_neows_view(&mut self) {
@@ -82,7 +88,8 @@ impl SpacePixUi {
         match &self.image_cache {
             Some(cache) => Ok(cache.clone()),
             None => {
-                let data = reqwest::blocking::get(URL)?
+                println!("{}", self.url);
+                let data = reqwest::blocking::get(&self.url)?
                     .text()
                     .expect("Failed to retrieve image from API...");
         
@@ -110,7 +117,7 @@ impl eframe::App for SpacePixUi {
 
         egui_extras::install_image_loaders(&ctx);
         match &self.current_view {
-            Views::APOD => SpacePixUi::load_apod_view(self),
+            Views::APOD => SpacePixUi::load_apod_view(self, Path::new("secret.json")),
             Views::NEOWS => SpacePixUi::load_neows_view(self),
             Views::DONKI => SpacePixUi::load_donki_view(self),
         };
