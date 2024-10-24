@@ -7,6 +7,8 @@ use json::JsonError;
 
 use crate::errors::SecretSauceFileNotFoundError;
 
+const SAUCE_PATH: &str = "secret.json";
+
 #[derive(Clone, Debug)]
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Urls {
@@ -26,9 +28,9 @@ impl Urls {
         Ok(sauce)
     }
 
-    pub fn get_secret_sauce(path: &str) -> Result<String, JsonError> {
-        let path_to_the_sauce = match Path::new(path).exists() {
-            true => Path::new(path),
+    pub fn get_secret_sauce() -> Result<String, JsonError> {
+        let path_to_the_sauce = match Path::new(SAUCE_PATH).exists() {
+            true => Path::new(SAUCE_PATH),
             false => panic!("Missing secret sauce file!")
         };
 
