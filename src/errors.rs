@@ -3,13 +3,6 @@ use std::fmt::Display;
 
 #[derive(Debug)]
 pub struct SecretSauceFileNotFoundError {}
-
-impl SecretSauceFileNotFoundError {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
 impl Error for SecretSauceFileNotFoundError {}
 
 impl Display for SecretSauceFileNotFoundError {
@@ -20,8 +13,6 @@ impl Display for SecretSauceFileNotFoundError {
 
 #[derive(Debug)]
 pub struct SecretSauceFileReadError {}
-
-
 impl Error for SecretSauceFileReadError {}
 
 impl Display for SecretSauceFileReadError {
