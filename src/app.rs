@@ -1,36 +1,21 @@
-use crate::Urls;
-use eframe::egui::{FontId, Id, RichText};
-use std::path::Path;
+use crate::{apis, Apod, Urls};
+use eframe::{egui::{FontId, RichText}, glow::Context};
 
-// const URL: &str = "https://api.nasa.gov/planetary/apod?api_key=rMRMa11aOjnpaIaeqeCcOV9EeDERZbfAX9cnLRGn";
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, PartialEq)]
-enum Views {
-    APOD,
-    NEOWS,
-    DONKI,
-}
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
 pub struct SpacePixUi {
-    url: String,
-    current_view: Views,
-    image_url: String,
-    image_cache: Option<(String, String)>,
-    image_desc: String,
+    apod: apis::Apod,
+    apod_cache: Option<(String, String)>
 }
 
 impl Default for SpacePixUi {
     fn default() -> Self {
         Self {
-            url: Urls::urls().apod,
-            current_view: Views::APOD,
-            image_url: String::from("Beans"), // This should point to some default logo file for now
-            image_cache: None,
-            image_desc: String::from("Beans"), // This can say something like: "Welcome to spacepix!"
+            apod: Apod::default(),
+            apod_cache: None
         }
     }
 }
@@ -49,31 +34,12 @@ impl SpacePixUi {
         Default::default()
     }
 
-    pub fn load_apod_view(&mut self, saucy_path: &Path) {
-        let sauce = Urls::get_secret_sauce(&saucy_path.to_str().unwrap()).expect("Failed to get the sauuuuuuuce!!!");
-        let urls = Urls::make_secret_sauce(sauce.as_str());
-
-        self.url = urls.unwrap().apod;
-        println!("We are currently in APOD view");
-        println!("{}", self.url);
-    }
-
-    pub fn load_neows_view(&mut self) {
-        println!("We are currently in NEOWS view");
-    }
-
-    pub fn load_donki_view(&mut self) {
-        println!("We are in DONKI view");
-    }
-
     #[allow(dead_code)]
     pub async fn get_pic_data() -> Result<(String, String), reqwest::Error> {
-        let data = reqwest::get(
-            "https://api.nasa.gov/planetary/apod?api_key=",
-        )
-        .await?
-        .text()
-        .await?;
+        let data = reqwest::get("https://api.nasa.gov/planetary/apod?api_key=")
+            .await?
+            .text()
+            .await?;
 
         let json_object = json::parse(&data).expect("Coultn't parse json.");
         let image_data: (String, String) = (
@@ -84,44 +50,53 @@ impl SpacePixUi {
         Ok(image_data)
     }
 
-    pub fn get_pic_data_blocking(&mut self) -> Result<(String, String), reqwest::Error> {
-        match &self.image_cache {
+    pub fn get_apod_data_blocking(&mut self) -> Result<(String, String), reqwest::Error> {
+        match &self.apod.cache {
             Some(cache) => Ok(cache.clone()),
             None => {
-                println!("{}", self.url);
-                let data = reqwest::blocking::get(&self.url)?
+                let sauce = Urls::get_secret_sauce()
+                        .expect("Failed to get the sauuuuuuuce!!!");
+                let url = Urls::make_secret_sauce(sauce.as_str()).unwrap().apod;
+                let data = reqwest::blocking::get(&url)?
                     .text()
                     .expect("Failed to retrieve image from API...");
-        
+
                 let json_object = json::parse(&data).expect("Failed to parse image data...");
                 let image_data: (String, String) = (
                     json_object["hdurl"].to_string(),
                     json_object["explanation"].to_string(),
                 );
-        
-                self.image_cache = Some(image_data.clone()); // Cache the image
-        
+
+                self.apod.cache = Some(image_data.clone()); // Cache the image
                 Ok(image_data)
             }
         }
+    }
+
+    pub fn show_about(&mut self, ctx: egui::Context) {
+        ctx.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("immediate_viewport"),
+            egui::ViewportBuilder::default()
+                .with_title("About Spacepix")
+                .with_inner_size([200.0, 100.0]),
+            |ctx, class| {
+                assert!(
+                    class == egui::ViewportClass::Immediate,
+                    "This egui backend doesn't support multiple viewports"
+                );
+
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.label("Hello from immediate viewport");
+                });
+            },
+        );
     }
 }
 
 impl eframe::App for SpacePixUi {
     #[allow(unused_variables)]
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        let image_data = self.get_pic_data_blocking().expect("Failed to get image...");
-        self.image_desc = image_data.1;
-        self.image_url = image_data.0;
-        let image = egui::Image::from_uri(self.image_url.clone()); // I had to clone here for some reason...
-
         egui_extras::install_image_loaders(&ctx);
-        match &self.current_view {
-            Views::APOD => SpacePixUi::load_apod_view(self, Path::new("secret.json")),
-            Views::NEOWS => SpacePixUi::load_neows_view(self),
-            Views::DONKI => SpacePixUi::load_donki_view(self),
-        };
-
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -134,52 +109,46 @@ impl eframe::App for SpacePixUi {
                     }
                 });
 
-                ui.menu_button("Views", |ui| {
+                ui.menu_button("Settings", |ui| {
                     if ui.button("APOD").clicked() {
-                        println!("Show pic of day view");
-                        if self.current_view != Views::APOD {
-                            self.current_view = Views::APOD;
-                        }
+                        println!("APOD Settings");
                     }
 
                     if ui.button("Asteroids - NeoWs").clicked() {
-                        if self.current_view != Views::NEOWS {
-                            self.current_view = Views::NEOWS;
-                        }
+                        println!("NeoWs Settings");
                     }
 
                     if ui.button("DONKI").clicked() {
-                        if self.current_view != Views::DONKI {
-                            self.current_view = Views::DONKI;
-                        }
+                        println!("DONKI Settings");
+                    }
+                });
+
+                ui.menu_button("Help", |ui| {
+                    if ui.button("About").clicked() {
+                        println!("Show Help");
+                        self.show_about(ctx.clone());
                     }
                 });
             });
         });
 
-        egui::SidePanel::new(egui::panel::Side::Left, Id::new("panel-left")).show(ctx, |ui| {
-            ui.add_space(40.0);
-            if ui.button("Previous").clicked() {
-                println!("Previous Image");
-            }
-        });
-
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::ScrollArea::both().show(ui, |ui| {
-                //ui.image(image.source(&ctx));
-                ui.image(
-                    egui::Image::new(image.source(&ctx))
-                        .shrink_to_fit()
-                        .source(&ctx),
-                );
+            egui::Window::new("APOD (Astronomy Pic Of the Day)").show(ctx, |ui| { // APOD Window //
+                egui::Frame::default().show(ui, |ui| {
+                    let image_data = self.get_apod_data_blocking().unwrap();
+                    let image = egui::Image::from_uri(image_data.0);
+                    ui.image(image.source(&ctx));
+                    ui.heading(RichText::new("Description:").font(FontId::monospace(30.0)));
+                    ui.separator();
+                    ui.label(RichText::new(&image_data.1).font(FontId::monospace(17.0)));
+                });
             });
-        });
 
-        egui::TopBottomPanel::bottom(Id::new("description")).show(ctx, |ui| {
-            ui.heading(RichText::new("Description:").font(FontId::monospace(30.0)));
-            ui.separator();
-            ui.label(RichText::new(&self.image_desc).font(FontId::monospace(17.0)));
-            ui.separator();
+            egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| { // NEOWS //
+                egui::Frame::default().show(ui, |ui| {
+                    ui.label("NEOWS!!");
+                })
+            });
         });
     }
 }
