@@ -4,6 +4,12 @@ authors = ["Mark A Waid <mark.waid94@gmail.com>"]
 version = "0.1.0"
 edition = "2021"
 
+[lirts]
+workspace = true
+
+[features]
+wgpu = ["eframe/wgpu"]
+
 [dependencies]
 clap = { version = "4.5.19", features = ["derive"] }
 egui = "0.29.1"
