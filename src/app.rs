@@ -1,5 +1,5 @@
 use crate::{apis, Apod, Urls};
-use eframe::{egui::{FontId, RichText}, glow::Context};
+use eframe::egui::{FontId, RichText};
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -73,11 +73,11 @@ impl SpacePixUi {
         }
     }
 
-    pub fn show_about(&mut self, ctx: egui::Context) {
+    fn show_about(&mut self, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("immediate_viewport"),
             egui::ViewportBuilder::default()
-                .with_title("About Spacepix")
+                .with_title("Immediate Viewport")
                 .with_inner_size([200.0, 100.0]),
             |ctx, class| {
                 assert!(
@@ -88,6 +88,11 @@ impl SpacePixUi {
                 egui::CentralPanel::default().show(ctx, |ui| {
                     ui.label("Hello from immediate viewport");
                 });
+
+                if ctx.input(|i| i.viewport().close_requested()) {
+                    // Tell parent viewport that we should not show next frame:
+                    //self.show_immediate_viewport = false;
+                }
             },
         );
     }
@@ -126,7 +131,7 @@ impl eframe::App for SpacePixUi {
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
                         println!("Show Help");
-                        self.show_about(ctx.clone());
+                        self.show_about(&ctx.clone());
                     }
                 });
             });
@@ -142,12 +147,20 @@ impl eframe::App for SpacePixUi {
                     ui.separator();
                     ui.label(RichText::new(&image_data.1).font(FontId::monospace(17.0)));
                 });
-            });
+            }); // APOD //
 
             egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| { // NEOWS //
                 egui::Frame::default().show(ui, |ui| {
+                    let mut latitude: String = String::default();
+                    let mut longitude: String = String::default();
                     ui.label("NEOWS!!");
-                })
+
+                    ui.label("Longitude:");
+                    ui.text_edit_singleline(&mut longitude).;
+
+                    ui.label("Latitude:");
+                    ui.text_edit_singleline(&mut latitude);
+                });
             });
         });
     }
