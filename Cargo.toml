@@ -4,9 +4,6 @@ authors = ["Mark A Waid <mark.waid94@gmail.com>"]
 version = "0.1.0"
 edition = "2021"
 
-[lirts]
-workspace = true
-
 [features]
 wgpu = ["eframe/wgpu"]
 
@@ -18,6 +15,7 @@ json = "0.12.4"
 serde = { version = "1.0.210", features = ["derive"] }
 tokio = { version = "1.40.0", features = ["full"] }
 eframe = { version = "0.29", default-features = false, features = [
+    "default",
     "accesskit",     # Make egui compatible with screen readers. NOTE: adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
@@ -27,7 +25,11 @@ log = "0.4"
 reqwest = { version = "0.12.8", features = ["blocking"] }
 egui_extras = { version = "0.29.1", features = ["all_loaders"] }
 image = { version = "0.25.4", features = ["jpeg", "png"] }
+env_logger = { version = "0.11", default-features = false, features = [
+    "auto-color",
+    "humantime",
+]}
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = "0.11"
+
