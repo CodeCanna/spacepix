@@ -137,31 +137,33 @@ impl eframe::App for SpacePixUi {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Window::new("APOD (Astronomy Pic Of the Day)").show(ctx, |ui| { // APOD Window //
+        egui::CentralPanel::default().show(ctx, |ui| { // APOD //
+            egui::Window::new("APOD (Astronomy Pic Of the Day)").max_height(1000.0).show(ctx, |ui| { // APOD Window //
                 egui::Frame::default().show(ui, |ui| {
                     let image_data = self.get_apod_data_blocking().unwrap();
                     let image = egui::Image::from_uri(image_data.0);
                     ui.image(image.source(&ctx));
                     ui.heading(RichText::new("Description:").font(FontId::monospace(30.0)));
                     ui.separator();
-                    ui.label(RichText::new(&image_data.1).font(FontId::monospace(17.0)));
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        ui.label(RichText::new(&image_data.1).font(FontId::monospace(17.0)));
+                    });
                 });
             }); // APOD //
 
-            egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| { // NEOWS //
-                egui::Frame::default().show(ui, |ui| {
-                    let mut latitude: String = String::default();
-                    let mut longitude: String = String::default();
-                    ui.label("NEOWS!!");
+            // egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| { // NEOWS //
+            //     egui::Frame::default().show(ui, |ui| {
+            //         let mut latitude: String = String::default();
+            //         let mut longitude: String = String::default();
+            //         ui.label("NEOWS!!");
 
-                    ui.label("Longitude:");
-                    ui.text_edit_singleline(&mut longitude).;
+            //         ui.label("Longitude:");
+            //         ui.text_edit_singleline(&mut longitude);
 
-                    ui.label("Latitude:");
-                    ui.text_edit_singleline(&mut latitude);
-                });
-            });
+            //         ui.label("Latitude:");
+            //         ui.text_edit_singleline(&mut latitude);
+            //     }); // NEOWS //
+            // });
         });
     }
 }
