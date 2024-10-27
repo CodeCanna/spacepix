@@ -1,7 +1,5 @@
 use crate::{Apod, NEOWS, Urls};
 use eframe::egui::{FontId, RichText};
-use egui::{text_edit, TextBuffer};
-use image::imageops::FilterType::Nearest;
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
