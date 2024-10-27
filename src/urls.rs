@@ -4,7 +4,6 @@ use std::path::Path;
 use std::fmt::Display;
 use std::fs::File;
 use json::JsonError;
-
 use crate::errors::SecretSauceFileNotFoundError;
 
 const SAUCE_PATH: &str = "secret.json";
