@@ -1,5 +1,7 @@
-use crate::{apis, Apod, Urls};
+use crate::{Apod, NEOWS, Urls};
 use eframe::egui::{FontId, RichText};
+use egui::{text_edit, TextBuffer};
+use image::imageops::FilterType::Nearest;
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -7,7 +9,8 @@ use eframe::egui::{FontId, RichText};
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
 pub struct SpacePixUi {
-    apod: apis::Apod,
+    apod: Apod,
+    neows: NEOWS,
     apod_cache: Option<(String, String)>
 }
 
@@ -15,6 +18,7 @@ impl Default for SpacePixUi {
     fn default() -> Self {
         Self {
             apod: Apod::default(),
+            neows: NEOWS::default(),
             apod_cache: None
         }
     }
@@ -151,19 +155,17 @@ impl eframe::App for SpacePixUi {
                 });
             }); // APOD //
 
-            // egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| { // NEOWS //
-            //     egui::Frame::default().show(ui, |ui| {
-            //         let mut latitude: String = String::default();
-            //         let mut longitude: String = String::default();
-            //         ui.label("NEOWS!!");
+            egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| { // NEOWS //
+                egui::Frame::default().show(ui, |ui| {
+                    ui.label("NEOWS!!");
 
-            //         ui.label("Longitude:");
-            //         ui.text_edit_singleline(&mut longitude);
+                    ui.label("Start Date:");
+                    ui.text_edit_singleline(&mut self.neows.start_date);
 
-            //         ui.label("Latitude:");
-            //         ui.text_edit_singleline(&mut latitude);
-            //     }); // NEOWS //
-            // });
+                    ui.label("End Date:");
+                    ui.text_edit_singleline(&mut self.neows.end_date);
+                }); // NEOWS //
+            });
         });
     }
 }
