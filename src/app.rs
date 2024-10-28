@@ -81,8 +81,8 @@ impl SpacePixUi {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("immediate_viewport"),
             egui::ViewportBuilder::default()
-                .with_title("Immediate Viewport")
-                .with_inner_size([200.0, 100.0]),
+                .with_title("About Spacepix")
+                .with_inner_size([500.0, 300.0]),
             |ctx, class| {
                 assert!(
                     class == egui::ViewportClass::Immediate,
@@ -90,7 +90,9 @@ impl SpacePixUi {
                 );
 
                 egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.label("Hello from immediate viewport");
+                    ui.heading("Spacepix");
+                    ui.label("Creator & Maintainer: Mark A Waid Jr - mark.waid94@gmail.com");
+                    ui.label("License: GNU");
                 });
 
                 if ctx.input(|i| i.viewport().close_requested()) {
