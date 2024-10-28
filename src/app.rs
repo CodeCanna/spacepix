@@ -100,7 +100,7 @@ impl SpacePixUi {
 
                 if ctx.input(|i| i.viewport().close_requested()) {
                     // Tell parent viewport that we should not show next frame:
-                    self.apod_full_window_visible = false;
+                    self.about_window_visible = false;
                 }
             },
         );
