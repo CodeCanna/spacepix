@@ -9,7 +9,8 @@ use eframe::egui::{FontId, RichText};
 pub struct SpacePixUi {
     apod: Apod,
     neows: NEOWS,
-    apod_cache: Option<(String, String)>
+    apod_cache: Option<(String, String)>,
+    about_window_visible: bool
 }
 
 impl Default for SpacePixUi {
@@ -17,7 +18,8 @@ impl Default for SpacePixUi {
         Self {
             apod: Apod::default(),
             neows: NEOWS::default(),
-            apod_cache: None
+            apod_cache: None,
+            about_window_visible: false
         }
     }
 }
@@ -93,7 +95,7 @@ impl SpacePixUi {
 
                 if ctx.input(|i| i.viewport().close_requested()) {
                     // Tell parent viewport that we should not show next frame:
-                    //self.show_immediate_viewport = false;
+                    self.about_window_visible = false;
                 }
             },
         );
@@ -132,8 +134,7 @@ impl eframe::App for SpacePixUi {
 
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
-                        println!("Show Help");
-                        self.show_about(&ctx.clone());
+                        self.about_window_visible = true; // Set about_window_visible to true so on next update() it will come up.
                     }
                 });
             });
@@ -165,5 +166,8 @@ impl eframe::App for SpacePixUi {
                 }); // NEOWS //
             });
         });
+        if self.about_window_visible {
+            self.show_about(&ctx);
+        }
     }
 }
