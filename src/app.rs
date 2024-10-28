@@ -82,7 +82,7 @@ impl SpacePixUi {
             egui::ViewportId::from_hash_of("immediate_viewport"),
             egui::ViewportBuilder::default()
                 .with_title("About Spacepix")
-                .with_inner_size([500.0, 300.0]),
+                .with_inner_size([300.0, 200.0]),
             |ctx, class| {
                 assert!(
                     class == egui::ViewportClass::Immediate,
