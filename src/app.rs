@@ -82,7 +82,7 @@ impl SpacePixUi {
             egui::ViewportId::from_hash_of("immediate_viewport"),
             egui::ViewportBuilder::default()
                 .with_title("About Spacepix")
-                .with_inner_size([500.0, 300.0]),
+                .with_inner_size([300.0, 200.0]),
             |ctx, class| {
                 assert!(
                     class == egui::ViewportClass::Immediate,
@@ -132,6 +132,10 @@ impl eframe::App for SpacePixUi {
                     if ui.button("DONKI").clicked() {
                         println!("DONKI Settings");
                     }
+                    ui.separator();
+                    if ui.button("Theme").clicked() {
+                        println!("Theme button clicked!");
+                    }
                 });
 
                 ui.menu_button("Help", |ui| {
@@ -147,7 +151,9 @@ impl eframe::App for SpacePixUi {
                 egui::Frame::default().show(ui, |ui| {
                     let image_data = self.get_apod_data_blocking().unwrap();
                     let image = egui::Image::from_uri(image_data.0);
-                    ui.image(image.source(&ctx));
+                    if ui.image(image.source(&ctx)).double_clicked() {
+                        println!("Clicked Image!");
+                    }
                     ui.heading(RichText::new("Description:").font(FontId::monospace(30.0)));
                     ui.separator();
                     egui::ScrollArea::vertical().show(ui, |ui| {
