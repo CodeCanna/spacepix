@@ -1,5 +1,6 @@
 use crate::{Apod, NEOWS, Urls};
 use eframe::egui::{FontId, RichText};
+use egui::Image;
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -10,7 +11,8 @@ pub struct SpacePixUi {
     apod: Apod,
     neows: NEOWS,
     apod_cache: Option<(String, String)>,
-    about_window_visible: bool
+    about_window_visible: bool,
+    apod_full_window_visible: bool
 }
 
 impl Default for SpacePixUi {
@@ -19,7 +21,8 @@ impl Default for SpacePixUi {
             apod: Apod::default(),
             neows: NEOWS::default(),
             apod_cache: None,
-            about_window_visible: false
+            about_window_visible: false,
+            apod_full_window_visible: false
         }
     }
 }
@@ -79,7 +82,7 @@ impl SpacePixUi {
 
     fn show_about(&mut self, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
-            egui::ViewportId::from_hash_of("immediate_viewport"),
+            egui::ViewportId::from_hash_of("about_viewport"),
             egui::ViewportBuilder::default()
                 .with_title("About Spacepix")
                 .with_inner_size([300.0, 200.0]),
@@ -98,6 +101,30 @@ impl SpacePixUi {
                 if ctx.input(|i| i.viewport().close_requested()) {
                     // Tell parent viewport that we should not show next frame:
                     self.about_window_visible = false;
+                }
+            },
+        );
+    }
+
+    fn show_apod_full(&mut self, img: &Image, ctx: &egui::Context) {
+        ctx.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("apod_viewport"),
+            egui::ViewportBuilder::default()
+                .with_title("Astronomy Picture of the Day Full Size")
+                .with_maximized(true),
+            |ctx, class| {
+                assert!(
+                    class == egui::ViewportClass::Immediate,
+                    "This egui backend doesn't support multiple viewports"
+                );
+
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.image(img.source(ctx));
+                });
+
+                if ctx.input(|i| i.viewport().close_requested()) {
+                    // Tell parent viewport that we should not show next frame:
+                    self.apod_full_window_visible = false;
                 }
             },
         );
@@ -150,15 +177,17 @@ impl eframe::App for SpacePixUi {
             egui::Window::new("APOD (Astronomy Pic Of the Day)").max_height(1000.0).show(ctx, |ui| { // APOD Window //
                 egui::Frame::default().show(ui, |ui| {
                     let image_data = self.get_apod_data_blocking().unwrap();
-                    let image = egui::Image::from_uri(image_data.0);
-                    if ui.image(image.source(&ctx)).double_clicked() {
-                        println!("Clicked Image!");
-                    }
+                    let image = egui::Image::from_uri(image_data.0).max_size(egui::Vec2::new(100.0, 100.0));
+                    //ui.image(image.source(&ctx));
+                    if ui.add(egui::widgets::ImageButton::new(image.source(&ctx))).clicked() { self.apod_full_window_visible = true; }
                     ui.heading(RichText::new("Description:").font(FontId::monospace(30.0)));
                     ui.separator();
                     egui::ScrollArea::vertical().show(ui, |ui| {
                         ui.label(RichText::new(&image_data.1).font(FontId::monospace(17.0)));
                     });
+                    if self.apod_full_window_visible {
+                        self.show_apod_full(&image, &ctx);
+                    }
                 });
             }); // APOD //
 
