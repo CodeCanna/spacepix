@@ -8,6 +8,7 @@ pub use apis::*;
 
 mod json_objects {
     pub struct NearEarthObject {
+        asteroid_id: String,
         name: String,
         estimagted_diameter: (f32, f32), // (min, max)
         is_potentially_hazardous_asteroid: bool,
