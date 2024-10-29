@@ -82,7 +82,7 @@ impl SpacePixUi {
 
     fn show_about(&mut self, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
-            egui::ViewportId::from_hash_of("immediate_viewport"),
+            egui::ViewportId::from_hash_of("about_viewport"),
             egui::ViewportBuilder::default()
                 .with_title("About Spacepix")
                 .with_inner_size([300.0, 200.0]),
@@ -108,7 +108,7 @@ impl SpacePixUi {
 
     fn show_apod_full(&mut self, img: &Image, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
-            egui::ViewportId::from_hash_of("immediate_viewport"),
+            egui::ViewportId::from_hash_of("apod_viewport"),
             egui::ViewportBuilder::default()
                 .with_title("Astronomy Picture of the Day Full Size")
                 .with_maximized(true),
