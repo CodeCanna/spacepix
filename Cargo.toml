@@ -30,6 +30,7 @@ env_logger = { version = "0.11", default-features = false, features = [
     "humantime",
 ]}
 time = "0.3.36"
+chrono = "0.4.38"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
