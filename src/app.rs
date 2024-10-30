@@ -2,6 +2,7 @@ use crate::{Apod, NEOWS, Urls};
 use eframe::egui::{FontId, RichText};
 use egui::Image;
 use chrono::NaiveDate;
+use json::JsonValue;
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -12,6 +13,7 @@ pub struct SpacePixUi {
     apod: Apod,
     neows: NEOWS,
     apod_cache: Option<(String, String)>,
+    neows_cache: Option<String>,
     about_window_visible: bool,
     apod_full_window_visible: bool
 }
