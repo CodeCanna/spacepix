@@ -20,3 +20,13 @@ impl Display for SecretSauceFileReadError {
      write!(f, "Failed to read Secret Sauce file!")
  }
 }
+
+#[derive(Debug)]
+pub struct NeoWsInvalidDate {}
+impl Error for NeoWsInvalidDate {}
+
+impl Display for NeoWsInvalidDate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Invalid date detected for NeoWs.")
+    }
+}
