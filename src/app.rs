@@ -1,6 +1,7 @@
 use crate::{Apod, NEOWS, Urls};
 use eframe::egui::{FontId, RichText};
 use egui::Image;
+use chrono::NaiveDate;
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -62,7 +63,7 @@ impl SpacePixUi {
             Some(cache) => Ok(cache.clone()),
             None => {
                 let sauce = Urls::get_secret_sauce()
-                        .expect("Failed to get the sauuuuuuuce!!!");
+                        .expect("Failed to get secret.");
                 let url = Urls::make_secret_sauce(sauce.as_str()).unwrap().apod;
                 let data = reqwest::blocking::get(&url)?
                     .text()
@@ -154,6 +155,10 @@ impl eframe::App for SpacePixUi {
 
                     if ui.button("Asteroids - NeoWs").clicked() {
                         println!("NeoWs Settings");
+                        // Urls::build_url_neows(
+                        //     NaiveDate::from_ymd_opt(2020, 4, 7).unwrap(),
+                        //       NaiveDate::from_ymd_opt(2020, 4, 1).unwrap()
+                        // );
                     }
 
                     if ui.button("DONKI").clicked() {
@@ -200,6 +205,9 @@ impl eframe::App for SpacePixUi {
 
                     ui.label("End Date:");
                     ui.text_edit_singleline(&mut self.neows.end_date);
+
+                    println!("Start Date: {}", self.neows.start_date);
+                    println!("End Date: {}", self.neows.end_date);
                 }); // NEOWS //
             });
         });
