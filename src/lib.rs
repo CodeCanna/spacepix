@@ -7,7 +7,7 @@ pub use urls::Urls;
 pub use apis::*;
 
 mod json_objects {
-    #[derive(Debug)]
+    #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
     pub struct NearEarthObject {
         pub asteroid_id: String,
         pub name: String,

@@ -70,10 +70,10 @@ impl SpacePixUi {
                 let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
                 let url = Urls::make_secret_sauce(sauce.as_str()).unwrap().apod;
                 let data = reqwest::blocking::get(&url)?
-                    .text()
-                    .expect("Failed to retrieve image from API...");
+                    .text()?;
+                    //.expect("Failed to retrieve image from API...");
 
-                let json_object = json::parse(&data).expect("Failed to parse image data...");
+                let json_object = json::parse(&data)?;//.expect("Failed to parse image data...");
                 let image_data: (String, String) = (
                     json_object["hdurl"].to_string(),
                     json_object["explanation"].to_string(),
@@ -94,10 +94,6 @@ impl SpacePixUi {
             NaiveDate::parse_from_str(&dates.0, "%Y-%m-%d").or(Err(FailedToGetDataNeows {}));
         let naive_end_date =
             NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d").or(Err(FailedToGetDataNeows {}));
-
-        // if naive_start_date.is_err() || naive_end_date.is_err() {
-        //     return Err(NeoWsInvalidDate{})
-        // }
 
         let url = Urls::build_url_neows(naive_start_date.unwrap(), naive_end_date.unwrap())
             .unwrap_or("fail".to_string());
