@@ -1,4 +1,4 @@
-use crate::errors::{NeoWsInvalidDate, SecretSauceFileNotFoundError};
+use crate::errors::{FailedToGetDataNeows, SecretSauceFileNotFoundError};
 use chrono::{DateTime, Local, NaiveDate};
 use json::JsonError;
 use reqwest::Url;
@@ -61,12 +61,12 @@ impl Urls {
     pub fn build_url_neows(
         start_date: NaiveDate,
         end_date: NaiveDate,
-    ) -> Result<String, NeoWsInvalidDate> {
+    ) -> Result<String, FailedToGetDataNeows> {
         let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
         // Get current date
         let current_date: NaiveDate = Local::now().date_naive();
         if start_date > current_date || end_date > current_date {
-            return Err(NeoWsInvalidDate {});
+            return Err(FailedToGetDataNeows {});
         }
         // Validate our dates or error
         // Validate the range or error
@@ -76,7 +76,7 @@ impl Urls {
             .replace("START_DATE", &start_date.to_string().as_str())
             .replace("END_DATE", &end_date.to_string().as_str());
         let url = format!("{}{}", url, sauce);
-        // Return Ok(Url, Error)
+        // Return
         Ok(url)
     }
 }
