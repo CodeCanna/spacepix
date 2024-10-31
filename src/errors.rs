@@ -22,11 +22,11 @@ impl Display for SecretSauceFileReadError {
 }
 
 #[derive(Debug)]
-pub struct NeoWsInvalidDate {}
-impl Error for NeoWsInvalidDate {}
+pub struct FailedToGetDataNeows {}
+impl Error for FailedToGetDataNeows {}
 
-impl Display for NeoWsInvalidDate {
+impl Display for FailedToGetDataNeows {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Invalid date detected for NeoWs.")
+        write!(f, "Failed to retrieve data for NeoWs")
     }
 }
