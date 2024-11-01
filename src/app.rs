@@ -1,10 +1,8 @@
-use std::{fmt::Debug, vec};
-
-use crate::{errors::FailedToGetDataNeows, json_objects::NearEarthObject, Apod, Urls, NEOWS};
-use chrono::{NaiveDate, ParseError};
+use std::vec;
+use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
-use json::JsonValue;
+use crate::{errors::FailedToGetDataNeows, json_objects::NearEarthObject, Apod, Urls, NEOWS};
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
