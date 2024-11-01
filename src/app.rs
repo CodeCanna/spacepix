@@ -16,6 +16,7 @@ pub struct SpacePixUi {
     neows_cache: Option<String>,
     about_window_visible: bool,
     apod_full_window_visible: bool,
+    neows_invalid_input_window_visible: bool
 }
 
 impl Default for SpacePixUi {
@@ -27,6 +28,7 @@ impl Default for SpacePixUi {
             neows_cache: None,
             about_window_visible: false,
             apod_full_window_visible: false,
+            neows_invalid_input_window_visible: false
         }
     }
 }
@@ -157,6 +159,35 @@ impl SpacePixUi {
         );
     }
 
+    fn show_neows_invlid_input_win(&mut self, ctx: &egui::Context) {
+        ctx.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("invalid_neows_input_viewport"),
+            egui::ViewportBuilder::default()
+                .with_title("Invalid Input")
+                .with_inner_size([300.0, 200.0]),
+            |ctx, class| {
+                assert!(
+                    class == egui::ViewportClass::Immediate,
+                    "This egui backend doesn't support multiple viewports"
+                );
+
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.heading("NeoWs Invalid Input!");
+                    ui.label("Both inputs must be valid dates within 7 days of eachother.  Also both vields must be filled out.");
+                    ui.label("Input Error!");
+                    if ui.button("Ok").clicked() {
+                        self.neows_invalid_input_window_visible = false;
+                    }
+                });
+
+                if ctx.input(|i| i.viewport().close_requested()) {
+                    // Tell parent viewport that we should not show next frame:
+                    self.neows_invalid_input_window_visible = false;
+                }
+            },
+        );
+    }
+
     fn show_apod_full(&mut self, img: &Image, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("apod_viewport"),
@@ -277,14 +308,22 @@ impl eframe::App for SpacePixUi {
 
                     let mut neows_ui_data = Vec::default();
                     if ui.button("Search").clicked() {
-                        println!("Start Date: {}", &self.neows.start_date);
-                        println!("End Date: {}", &self.neows.end_date);
-                        neows_ui_data = self
-                            .get_neows_data_blocking((
-                                self.neows.start_date.clone(),
-                                self.neows.end_date.clone(),
-                            ))
-                            .unwrap();
+                        if ! self.neows.start_date.is_empty() && self.neows.end_date.is_empty() {
+                            println!("Start Date: {}", &self.neows.start_date);
+                            println!("End Date: {}", &self.neows.end_date);
+                            neows_ui_data = self
+                                .get_neows_data_blocking((
+                                    self.neows.start_date.clone(),
+                                    self.neows.end_date.clone(),
+                                ))
+                                .unwrap();
+                        }
+                        
+                        self.neows_invalid_input_window_visible = true;
+                    }
+
+                    if self.neows_invalid_input_window_visible {
+                        self.show_neows_invlid_input_win(&ctx.clone());
                     }
 
                     // ui.label(neows_ui_data[0].asteroid_id.clone());
