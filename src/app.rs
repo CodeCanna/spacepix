@@ -104,11 +104,21 @@ impl SpacePixUi {
 
         let url =
             Urls::build_url_neows(naive_start_date, naive_end_date).unwrap_or("fail".to_string());
-        let data = reqwest::blocking::get(url)
-            .unwrap()
-            .text()
-            .or(Err(FailedToGetDataNeows {}));
-        let json_data = json::parse(&data.unwrap()).unwrap();
+
+        let data = match reqwest::blocking::get(url) {
+            Ok(d) => d.text(),
+            Err(_) => {return Err(FailedToGetDataNeows{})}
+        };
+        // let data = reqwest::blocking::get(url)
+        //     .unwrap()
+        //     .text()
+        //     .or(Err(FailedToGetDataNeows {}));
+        //let json_data = json::parse(&data.unwrap());
+
+        let json_data = match json::parse(&data.unwrap()) {
+            Ok(jv) => jv,
+            Err(_) => {return Err(FailedToGetDataNeows{})}
+        };
 
         let objects = json_data["near_earth_objects"][&dates.0].members();
         let mut objects_vec: Vec<NearEarthObject> = vec![];
