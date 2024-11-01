@@ -1,8 +1,11 @@
-use std::vec;
-use chrono::NaiveDate;
-use eframe::egui::{FontId, RichText};
-use egui::Image;
 use crate::{errors::FailedToGetDataNeows, json_objects::NearEarthObject, Apod, Urls, NEOWS};
+use chrono::NaiveDate;
+use eframe::{
+    egui::{FontId, RichText},
+    glow::OR,
+};
+use egui::Image;
+use std::vec;
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -16,6 +19,7 @@ pub struct SpacePixUi {
     neows_cache: Option<String>,
     about_window_visible: bool,
     apod_full_window_visible: bool,
+    neows_invalid_input_window_visible: bool,
 }
 
 impl Default for SpacePixUi {
@@ -27,6 +31,7 @@ impl Default for SpacePixUi {
             neows_cache: None,
             about_window_visible: false,
             apod_full_window_visible: false,
+            neows_invalid_input_window_visible: false,
         }
     }
 }
@@ -87,13 +92,18 @@ impl SpacePixUi {
         dates: (String, String),
     ) -> Result<Vec<NearEarthObject>, FailedToGetDataNeows> {
         // Create NaiveDates from strings
-        let naive_start_date =
-            NaiveDate::parse_from_str(&dates.0, "%Y-%m-%d").or(Err(FailedToGetDataNeows {}));
-        let naive_end_date =
-            NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d").or(Err(FailedToGetDataNeows {}));
+        let naive_start_date = match NaiveDate::parse_from_str(&dates.0, "%Y-%m-%d") {
+            Ok(date) => date,
+            Err(_) => return Err(FailedToGetDataNeows {}),
+        };
 
-        let url = Urls::build_url_neows(naive_start_date.unwrap(), naive_end_date.unwrap())
-            .unwrap_or("fail".to_string());
+        let naive_end_date = match NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d") {
+            Ok(date) => date,
+            Err(_) => return Err(FailedToGetDataNeows {}),
+        };
+
+        let url =
+            Urls::build_url_neows(naive_start_date, naive_end_date).unwrap_or("fail".to_string());
         let data = reqwest::blocking::get(url)
             .unwrap()
             .text()
@@ -152,6 +162,35 @@ impl SpacePixUi {
                 if ctx.input(|i| i.viewport().close_requested()) {
                     // Tell parent viewport that we should not show next frame:
                     self.about_window_visible = false;
+                }
+            },
+        );
+    }
+
+    fn show_neows_invlid_input_win(&mut self, ctx: &egui::Context) {
+        ctx.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("invalid_neows_input_viewport"),
+            egui::ViewportBuilder::default()
+                .with_title("Invalid Input")
+                .with_inner_size([300.0, 200.0]),
+            |ctx, class| {
+                assert!(
+                    class == egui::ViewportClass::Immediate,
+                    "This egui backend doesn't support multiple viewports"
+                );
+
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.heading("NeoWs Invalid Input!");
+                    ui.label("Both inputs must be valid dates within 7 days of eachother.  Also both vields must be filled out.");
+                    ui.label("Input Error!");
+                    if ui.button("Ok").clicked() {
+                        self.neows_invalid_input_window_visible = false;
+                    }
+                });
+
+                if ctx.input(|i| i.viewport().close_requested()) {
+                    // Tell parent viewport that we should not show next frame:
+                    self.neows_invalid_input_window_visible = false;
                 }
             },
         );
@@ -239,9 +278,9 @@ impl eframe::App for SpacePixUi {
                         match image_data {
                             Ok(data) => {
                                 if ui
-                                    .add(egui::widgets::ImageButton::new(
-                                        egui::Image::from_uri(&data.0),
-                                    ))
+                                    .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
+                                        &data.0,
+                                    )))
                                     .clicked()
                                 {
                                     self.apod_full_window_visible = true;
@@ -251,15 +290,15 @@ impl eframe::App for SpacePixUi {
                                 );
                                 ui.separator();
                                 egui::ScrollArea::vertical().show(ui, |ui| {
-                                    ui.label(
-                                        RichText::new(&data.1).font(FontId::monospace(17.0)),
-                                    );
+                                    ui.label(RichText::new(&data.1).font(FontId::monospace(17.0)));
                                 });
                                 if self.apod_full_window_visible {
                                     self.show_apod_full(&egui::Image::from_uri(&data.0), &ctx);
                                 }
-                            },
-                            Err(_) => {ui.label("Network connection error!");}
+                            }
+                            Err(_) => {
+                                ui.label("Network connection error!");
+                            }
                         }
                     });
                 }); // APOD //
@@ -275,23 +314,29 @@ impl eframe::App for SpacePixUi {
                     ui.label("End Date:");
                     ui.text_edit_singleline(&mut self.neows.end_date);
 
-                    let mut neows_ui_data = Vec::default();
+                    // let mut neows_ui_data = Vec::default();
                     if ui.button("Search").clicked() {
-                        println!("Start Date: {}", &self.neows.start_date);
-                        println!("End Date: {}", &self.neows.end_date);
-                        neows_ui_data = self
-                            .get_neows_data_blocking((
-                                self.neows.start_date.clone(),
-                                self.neows.end_date.clone(),
-                            ))
-                            .unwrap();
+                        match self.get_neows_data_blocking((
+                            self.neows.start_date.clone(),
+                            self.neows.end_date.clone(),
+                        )) {
+                            Ok(data) => {
+                                for object in data {
+                                    println!("{}", object.asteroid_id);
+                                }
+                            }
+                            Err(_) => {
+                                self.neows_invalid_input_window_visible = true;
+                            }
+                        }
                     }
-
-                    // ui.label(neows_ui_data[0].asteroid_id.clone());
-                    dbg!(neows_ui_data);
                 });
             }); // NEOWS //
         });
+        if self.neows_invalid_input_window_visible {
+            self.show_neows_invlid_input_win(&ctx.clone());
+        }
+
         if self.about_window_visible {
             self.show_about(&ctx);
         }
