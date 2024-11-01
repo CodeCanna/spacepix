@@ -323,6 +323,7 @@ impl eframe::App for SpacePixUi {
                             Ok(data) => {
                                 for object in data {
                                     println!("{}", object.asteroid_id);
+                                    ui.add(egui::Label::new(object.asteroid_id));
                                 }
                             }
                             Err(_) => {
