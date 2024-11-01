@@ -1,6 +1,8 @@
-use crate::{Apod, NEOWS, Urls};
+use std::vec;
+use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
+use crate::{errors::FailedToGetDataNeows, json_objects::NearEarthObject, Apod, Urls, NEOWS};
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -11,8 +13,9 @@ pub struct SpacePixUi {
     apod: Apod,
     neows: NEOWS,
     apod_cache: Option<(String, String)>,
+    neows_cache: Option<String>,
     about_window_visible: bool,
-    apod_full_window_visible: bool
+    apod_full_window_visible: bool,
 }
 
 impl Default for SpacePixUi {
@@ -21,8 +24,9 @@ impl Default for SpacePixUi {
             apod: Apod::default(),
             neows: NEOWS::default(),
             apod_cache: None,
+            neows_cache: None,
             about_window_visible: false,
-            apod_full_window_visible: false
+            apod_full_window_visible: false,
         }
     }
 }
@@ -61,14 +65,12 @@ impl SpacePixUi {
         match &self.apod.cache {
             Some(cache) => Ok(cache.clone()),
             None => {
-                let sauce = Urls::get_secret_sauce()
-                        .expect("Failed to get the sauuuuuuuce!!!");
+                let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
                 let url = Urls::make_secret_sauce(sauce.as_str()).unwrap().apod;
-                let data = reqwest::blocking::get(&url)?
-                    .text()
-                    .expect("Failed to retrieve image from API...");
+                let data = reqwest::blocking::get(&url)?.text()?;
+                //.expect("Failed to retrieve image from API...");
 
-                let json_object = json::parse(&data).expect("Failed to parse image data...");
+                let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
                 let image_data: (String, String) = (
                     json_object["hdurl"].to_string(),
                     json_object["explanation"].to_string(),
@@ -78,6 +80,55 @@ impl SpacePixUi {
                 Ok(image_data)
             }
         }
+    }
+
+    pub fn get_neows_data_blocking(
+        &mut self,
+        dates: (String, String),
+    ) -> Result<Vec<NearEarthObject>, FailedToGetDataNeows> {
+        // Create NaiveDates from strings
+        let naive_start_date =
+            NaiveDate::parse_from_str(&dates.0, "%Y-%m-%d").or(Err(FailedToGetDataNeows {}));
+        let naive_end_date =
+            NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d").or(Err(FailedToGetDataNeows {}));
+
+        let url = Urls::build_url_neows(naive_start_date.unwrap(), naive_end_date.unwrap())
+            .unwrap_or("fail".to_string());
+        let data = reqwest::blocking::get(url)
+            .unwrap()
+            .text()
+            .or(Err(FailedToGetDataNeows {}));
+        let json_data = json::parse(&data.unwrap()).unwrap();
+
+        let objects = json_data["near_earth_objects"][&dates.0].members();
+        let mut objects_vec: Vec<NearEarthObject> = vec![];
+
+        for object in objects {
+            println!(
+                "Relative Velocity: {}",
+                object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string()
+            );
+            let o = NearEarthObject::new(
+                object["id"].to_string(),
+                object["name"].to_string(),
+                (
+                    object["estimated_diameter"]["feet"]["estimated_diameter_min"].to_string(),
+                    object["estimated_diameter"]["feet"]["estimated_diameter_max"].to_string(),
+                ),
+                object["is_potentially_hazardous_asteroid"]
+                    .as_bool()
+                    .unwrap(),
+                object["close_approach_data"][0]["close_approach_date"].to_string(),
+                object["close_approach_data"][0]["close_approach_date_full"].to_string(),
+                object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string(),
+                object["close_approach_data"][0]["miss_distance"]["miles"].to_string(),
+                object["close_approach_data"][0]["orbiting_body"].to_string(),
+            );
+            objects_vec.push(o);
+        }
+
+        // println!("{}", json_data["near_earth_objects"][dates.0][0].pretty(4));
+        Ok(objects_vec)
     }
 
     fn show_about(&mut self, ctx: &egui::Context) {
@@ -154,6 +205,10 @@ impl eframe::App for SpacePixUi {
 
                     if ui.button("Asteroids - NeoWs").clicked() {
                         println!("NeoWs Settings");
+                        // Urls::build_url_neows(
+                        //     NaiveDate::from_ymd_opt(2020, 4, 7).unwrap(),
+                        //       NaiveDate::from_ymd_opt(2020, 4, 1).unwrap()
+                        // );
                     }
 
                     if ui.button("DONKI").clicked() {
@@ -173,25 +228,44 @@ impl eframe::App for SpacePixUi {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| { // APOD //
-            egui::Window::new("APOD (Astronomy Pic Of the Day)").max_height(1000.0).show(ctx, |ui| { // APOD Window //
-                egui::Frame::default().show(ui, |ui| {
-                    let image_data = self.get_apod_data_blocking().unwrap();
-                    let image = egui::Image::from_uri(image_data.0).max_size(egui::Vec2::new(100.0, 100.0));
-                    //ui.image(image.source(&ctx));
-                    if ui.add(egui::widgets::ImageButton::new(image.source(&ctx))).clicked() { self.apod_full_window_visible = true; }
-                    ui.heading(RichText::new("Description:").font(FontId::monospace(30.0)));
-                    ui.separator();
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        ui.label(RichText::new(&image_data.1).font(FontId::monospace(17.0)));
+        egui::CentralPanel::default().show(ctx, |ui| {
+            // APOD //
+            egui::Window::new("APOD (Astronomy Pic Of the Day)")
+                .max_height(1000.0)
+                .show(ctx, |ui| {
+                    // APOD Window //
+                    egui::Frame::default().show(ui, |ui| {
+                        let image_data = self.get_apod_data_blocking();
+                        match image_data {
+                            Ok(data) => {
+                                if ui
+                                    .add(egui::widgets::ImageButton::new(
+                                        egui::Image::from_uri(&data.0),
+                                    ))
+                                    .clicked()
+                                {
+                                    self.apod_full_window_visible = true;
+                                }
+                                ui.heading(
+                                    RichText::new("Description:").font(FontId::monospace(30.0)),
+                                );
+                                ui.separator();
+                                egui::ScrollArea::vertical().show(ui, |ui| {
+                                    ui.label(
+                                        RichText::new(&data.1).font(FontId::monospace(17.0)),
+                                    );
+                                });
+                                if self.apod_full_window_visible {
+                                    self.show_apod_full(&egui::Image::from_uri(&data.0), &ctx);
+                                }
+                            },
+                            Err(_) => {ui.label("Network connection error!");}
+                        }
                     });
-                    if self.apod_full_window_visible {
-                        self.show_apod_full(&image, &ctx);
-                    }
-                });
-            }); // APOD //
+                }); // APOD //
 
-            egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| { // NEOWS //
+            egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| {
+                // NEOWS //
                 egui::Frame::default().show(ui, |ui| {
                     ui.label("NEOWS!!");
 
@@ -200,8 +274,23 @@ impl eframe::App for SpacePixUi {
 
                     ui.label("End Date:");
                     ui.text_edit_singleline(&mut self.neows.end_date);
-                }); // NEOWS //
-            });
+
+                    let mut neows_ui_data = Vec::default();
+                    if ui.button("Search").clicked() {
+                        println!("Start Date: {}", &self.neows.start_date);
+                        println!("End Date: {}", &self.neows.end_date);
+                        neows_ui_data = self
+                            .get_neows_data_blocking((
+                                self.neows.start_date.clone(),
+                                self.neows.end_date.clone(),
+                            ))
+                            .unwrap();
+                    }
+
+                    // ui.label(neows_ui_data[0].asteroid_id.clone());
+                    dbg!(neows_ui_data);
+                });
+            }); // NEOWS //
         });
         if self.about_window_visible {
             self.show_about(&ctx);
