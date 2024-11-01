@@ -329,19 +329,6 @@ impl eframe::App for SpacePixUi {
                                 self.neows_invalid_input_window_visible = true;
                             }
                         }
-                        // if ! self.neows.start_date.is_empty() || self.neows.end_date.is_empty() {
-                        //     println!("Start Date: {}", &self.neows.start_date);
-                        //     println!("End Date: {}", &self.neows.end_date);
-                        //     neows_ui_data = self
-                        //         .get_neows_data_blocking((
-                        //             self.neows.start_date.clone(),
-                        //             self.neows.end_date.clone(),
-                        //         ))
-                        //         .unwrap();
-                        // } else {
-                        //     self.neows_invalid_input_window_visible = true;
-                        //     println!("{}", self.neows_invalid_input_window_visible);
-                        // }
                     }
                 });
             }); // NEOWS //
