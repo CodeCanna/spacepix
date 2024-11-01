@@ -69,11 +69,10 @@ impl SpacePixUi {
             None => {
                 let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
                 let url = Urls::make_secret_sauce(sauce.as_str()).unwrap().apod;
-                let data = reqwest::blocking::get(&url)?
-                    .text()?;
-                    //.expect("Failed to retrieve image from API...");
+                let data = reqwest::blocking::get(&url)?.text()?;
+                //.expect("Failed to retrieve image from API...");
 
-                let json_object = json::parse(&data)?;//.expect("Failed to parse image data...");
+                let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
                 let image_data: (String, String) = (
                     json_object["hdurl"].to_string(),
                     json_object["explanation"].to_string(),
@@ -238,23 +237,31 @@ impl eframe::App for SpacePixUi {
                 .show(ctx, |ui| {
                     // APOD Window //
                     egui::Frame::default().show(ui, |ui| {
-                        let image_data = self.get_apod_data_blocking().unwrap();
-                        let image = egui::Image::from_uri(image_data.0)
-                            .max_size(egui::Vec2::new(100.0, 100.0));
-                        //ui.image(image.source(&ctx));
-                        if ui
-                            .add(egui::widgets::ImageButton::new(image.source(&ctx)))
-                            .clicked()
-                        {
-                            self.apod_full_window_visible = true;
-                        }
-                        ui.heading(RichText::new("Description:").font(FontId::monospace(30.0)));
-                        ui.separator();
-                        egui::ScrollArea::vertical().show(ui, |ui| {
-                            ui.label(RichText::new(&image_data.1).font(FontId::monospace(17.0)));
-                        });
-                        if self.apod_full_window_visible {
-                            self.show_apod_full(&image, &ctx);
+                        let image_data = self.get_apod_data_blocking();
+                        match image_data {
+                            Ok(data) => {
+                                if ui
+                                    .add(egui::widgets::ImageButton::new(
+                                        egui::Image::from_uri(&data.0),
+                                    ))
+                                    .clicked()
+                                {
+                                    self.apod_full_window_visible = true;
+                                }
+                                ui.heading(
+                                    RichText::new("Description:").font(FontId::monospace(30.0)),
+                                );
+                                ui.separator();
+                                egui::ScrollArea::vertical().show(ui, |ui| {
+                                    ui.label(
+                                        RichText::new(&data.1).font(FontId::monospace(17.0)),
+                                    );
+                                });
+                                if self.apod_full_window_visible {
+                                    self.show_apod_full(&egui::Image::from_uri(&data.0), &ctx);
+                                }
+                            },
+                            Err(_) => {ui.label("Network connection error!");}
                         }
                     });
                 }); // APOD //
