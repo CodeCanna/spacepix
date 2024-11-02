@@ -1,11 +1,12 @@
-use crate::errors::{FailedToGetDataNeows, SecretSauceFileNotFoundError};
+use crate::errors::{FailedToGetDataNeows, FailedToCreateSecretSauce, FailedToGetSecretSauce, SecretSauceFileNotFoundError};
 use chrono::{Local, NaiveDate};
-use json::JsonError;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fs::File;
 use std::io::Read;
+use std::io::Write;
 use std::path::Path;
+use std::usize;
 
 const SAUCE_PATH: &str = "secret.json";
 
@@ -27,24 +28,25 @@ impl Urls {
         Ok(sauce)
     }
 
-    pub fn get_secret_sauce() -> Result<String, JsonError> {
-        let path_to_the_sauce = match Path::new(SAUCE_PATH).exists() {
-            true => Path::new(SAUCE_PATH),
-            false => panic!("Missing secret sauce file!"),
-        };
-
-        let mut saucy_file = match File::open(path_to_the_sauce) {
+    pub fn get_secret_sauce() -> Result<String, FailedToGetSecretSauce> {
+        let mut saucy_file = match File::open(Path::new(SAUCE_PATH)) {
             Ok(f) => f,
-            Err(f) => panic!("{}", f),
+            Err(_) => match File::create(Path::new(SAUCE_PATH)) {
+                Ok(mut f) => {
+                    let buff = String::from("{\"key\": \"API_KEY\"}");
+                    File::write(&mut f, buff.as_bytes()).unwrap();
+                    f
+                },
+                Err(_) => {return Err(FailedToGetSecretSauce{})}
+            }
         };
 
-        let mut saucy_string: String = String::from("");
+        let mut sauce = String::default();
+        let _ = saucy_file.read_to_string(&mut sauce).or(Err(FailedToGetSecretSauce{}));
 
-        saucy_file.read_to_string(&mut saucy_string).unwrap();
-
-        match json::parse(&saucy_string) {
-            Ok(f) => Ok(f["key"].to_string()),
-            Err(f) => Err(f),
+        match json::parse(&sauce) {
+            Ok(s) => Ok(s["key"].to_string()),
+            Err(_) => {return Err(FailedToGetSecretSauce{})}
         }
     }
 
@@ -66,9 +68,7 @@ impl Urls {
         if start_date > current_date || end_date > current_date {
             return Err(FailedToGetDataNeows {});
         }
-        // Validate our dates or error
-        // Validate the range or error
-        // Build the URL
+
         let url: String = Urls::urls().neows;
         let url: String = url
             .replace("START_DATE", &start_date.to_string().as_str())
