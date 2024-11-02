@@ -1,8 +1,6 @@
 use crate::errors::{FailedToGetDataNeows, SecretSauceFileNotFoundError};
-use chrono::{DateTime, Local, NaiveDate};
+use chrono::{Local, NaiveDate};
 use json::JsonError;
-use reqwest::Url;
-use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fs::File;
