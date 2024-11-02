@@ -1,9 +1,6 @@
 use crate::{errors::FailedToGetDataNeows, json_objects::NearEarthObject, Apod, Urls, NEOWS};
 use chrono::NaiveDate;
-use eframe::{
-    egui::{FontId, RichText},
-    glow::OR,
-};
+use eframe::egui::{FontId, RichText};
 use egui::Image;
 use std::vec;
 
