@@ -12,6 +12,26 @@ impl Display for SecretSauceFileNotFoundError {
 }
 
 #[derive(Debug)]
+pub struct FailedToCreateSecretSauce {}
+impl Error for FailedToCreateSecretSauce {}
+
+impl Display for FailedToCreateSecretSauce {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Failed to create secret.json file.")
+    }
+}
+
+#[derive(Debug)]
+pub struct FailedToGetSecretSauce {}
+impl Error for FailedToGetSecretSauce {}
+
+impl Display for FailedToGetSecretSauce {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "No API key found!")
+    }
+}
+
+#[derive(Debug)]
 pub struct FailedToGetDataApod {}
 impl Error for FailedToGetDataApod {}
 
