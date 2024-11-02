@@ -1,4 +1,6 @@
-use crate::{errors::FailedToGetDataNeows, json_objects::NearEarthObject, Apod, Urls, NEOWS};
+use crate::{json_objects::NearEarthObject, Apod, Urls, NEOWS};
+use crate::errors::{FailedToGetDataApod, FailedToGetDataNeows};
+use crate::apis::ApiKey;
 use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
@@ -12,9 +14,11 @@ use std::vec;
 pub struct SpacePixUi {
     apod: Apod,
     neows: NEOWS,
+    api_key: ApiKey,
     apod_cache: Option<(String, String)>,
     neows_cache: Option<String>,
     about_window_visible: bool,
+    api_key_input_visible: bool,
     apod_full_window_visible: bool,
     neows_invalid_input_window_visible: bool,
 }
@@ -24,9 +28,11 @@ impl Default for SpacePixUi {
         Self {
             apod: Apod::default(),
             neows: NEOWS::default(),
+            api_key: ApiKey::default(),
             apod_cache: None,
             neows_cache: None,
             about_window_visible: false,
+            api_key_input_visible: false,
             apod_full_window_visible: false,
             neows_invalid_input_window_visible: false,
         }
@@ -63,14 +69,25 @@ impl SpacePixUi {
         Ok(image_data)
     }
 
-    pub fn get_apod_data_blocking(&mut self) -> Result<(String, String), reqwest::Error> {
+    pub fn get_apod_data_blocking(&mut self) -> Result<(String, String), FailedToGetDataApod> {
         match &self.apod.cache {
             Some(cache) => Ok(cache.clone()),
             None => {
-                let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
-                let url = Urls::make_secret_sauce(sauce.as_str()).unwrap().apod;
-                let data = reqwest::blocking::get(&url)?.text()?;
+                //let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
+                let sauce = match Urls::get_secret_sauce() {
+                    Ok(sus) => sus,
+                    Err(_) => {return Err(FailedToGetDataApod{})}
+                };
+                let url = Urls::make_secret_sauce(&sauce).unwrap().apod;
+                //let data = reqwest::blocking::get(&url)?.text()?;
+
+                let data = match reqwest::blocking::get(&url) {
+                    Ok(r) => r.text().unwrap(),
+                    Err(_) => {return Err(FailedToGetDataApod{})}
+                };
                 //.expect("Failed to retrieve image from API...");
+
+                println!("{}", sauce);
 
                 let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
                 let image_data: (String, String) = (
@@ -226,6 +243,34 @@ impl SpacePixUi {
             },
         );
     }
+
+    fn show_api_input(&mut self, ctx: &egui::Context) {
+        ctx.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("show_api_input_viewport"),
+            egui::ViewportBuilder::default()
+                .with_title("API Key")
+                .with_inner_size([300.0, 200.0]),
+            |ctx, class| {
+                assert!(
+                    class == egui::ViewportClass::Immediate,
+                    "This egui backend doesn't support multiple viewports"
+                );
+
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.heading("API Key not Found Enter it Below:");
+                    ui.text_edit_singleline(&mut self.api_key.key);
+                    if ui.button("Submit").clicked() {
+                        println!("Beans!");
+                    }
+                });
+
+                if ctx.input(|i| i.viewport().close_requested()) {
+                    // Tell parent viewport that we should not show next frame:
+                    self.api_key_input_visible = false;
+                }
+            },
+        );
+    }
 }
 
 impl eframe::App for SpacePixUi {
@@ -237,6 +282,10 @@ impl eframe::App for SpacePixUi {
                 ui.menu_button("File", |ui| {
                     if ui.button("Save").clicked() {
                         println!("Save");
+                    }
+
+                    if ui.button("Set API Key").clicked() {
+                        self.api_key_input_visible = true;
                     }
 
                     if ui.button("Quit").clicked() {
@@ -341,6 +390,10 @@ impl eframe::App for SpacePixUi {
                 });
             }); // NEOWS //
         });
+        if self.api_key_input_visible {
+            self.show_api_input(&ctx.clone());
+        }
+
         if self.neows_invalid_input_window_visible {
             self.show_neows_invlid_input_win(&ctx.clone());
         }
