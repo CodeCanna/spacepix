@@ -1,10 +1,14 @@
-use crate::{json_objects::NearEarthObject, Apod, Urls, NEOWS};
-use crate::errors::{FailedToGetDataApod, FailedToGetDataNeows};
 use crate::apis::ApiKey;
+use crate::errors::{FailedToGetDataApod, FailedToGetDataNeows, SecretSauceFileNotFoundError};
+use crate::{json_objects::NearEarthObject, Apod, Urls, NEOWS};
 use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
-use std::vec;
+use std::io::{Read, Write};
+use std::{fs, path};
+use std::{path::Path, vec};
+
+const SAUCE_PATH: &str = "secret.json";
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -76,14 +80,14 @@ impl SpacePixUi {
                 //let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
                 let sauce = match Urls::get_secret_sauce() {
                     Ok(sus) => sus,
-                    Err(_) => {return Err(FailedToGetDataApod{})}
+                    Err(_) => return Err(FailedToGetDataApod {}),
                 };
                 let url = Urls::make_secret_sauce(&sauce).unwrap().apod;
                 //let data = reqwest::blocking::get(&url)?.text()?;
 
                 let data = match reqwest::blocking::get(&url) {
                     Ok(r) => r.text().unwrap(),
-                    Err(_) => {return Err(FailedToGetDataApod{})}
+                    Err(_) => return Err(FailedToGetDataApod {}),
                 };
                 //.expect("Failed to retrieve image from API...");
 
@@ -121,7 +125,7 @@ impl SpacePixUi {
 
         let data = match reqwest::blocking::get(url) {
             Ok(d) => d.text(),
-            Err(_) => {return Err(FailedToGetDataNeows{})}
+            Err(_) => return Err(FailedToGetDataNeows {}),
         };
         // let data = reqwest::blocking::get(url)
         //     .unwrap()
@@ -131,7 +135,7 @@ impl SpacePixUi {
 
         let json_data = match json::parse(&data.unwrap()) {
             Ok(jv) => jv,
-            Err(_) => {return Err(FailedToGetDataNeows{})}
+            Err(_) => return Err(FailedToGetDataNeows {}),
         };
 
         let objects = json_data["near_earth_objects"][&dates.0].members();
@@ -163,6 +167,44 @@ impl SpacePixUi {
 
         // println!("{}", json_data["near_earth_objects"][dates.0][0].pretty(4));
         Ok(objects_vec)
+    }
+
+    fn set_api_key(
+        &mut self,
+        secret_path: &Path,
+        key: String,
+    ) -> Result<(), SecretSauceFileNotFoundError> {
+        match std::fs::File::open(secret_path) {
+            Ok(mut f) => {
+                let mut buff = String::default();
+                let _ = f.read_to_string(&mut buff);
+                let mut json_buff = json::parse(&buff).unwrap();
+                json_buff.insert("key", key).unwrap();
+
+                println!("{}", &json_buff.to_string());
+                match f.write_all(&json_buff.to_string().as_bytes()) {
+                    Ok(r) => Ok(r),
+                    Err(e) => {
+                        println!("{}", e);
+                        return Err(SecretSauceFileNotFoundError {})
+                    },
+                }
+            }
+            Err(_) => match fs::File::create(Path::new(SAUCE_PATH)) {
+                Ok(mut f) => {
+                    let mut buff = String::default();
+                    let _ = f.read_to_string(&mut buff);
+                    let mut json_buff = json::parse(&buff).unwrap();
+                    json_buff.insert("key", key).unwrap();
+
+                    match f.write(json_buff.to_string().as_bytes()) {
+                        Ok(_) => Ok(()),
+                        Err(_) => return Err(SecretSauceFileNotFoundError {}),
+                    }
+                }
+                Err(_) => return Err(SecretSauceFileNotFoundError {}),
+            },
+        }
     }
 
     fn show_about(&mut self, ctx: &egui::Context) {
@@ -261,6 +303,16 @@ impl SpacePixUi {
                     ui.text_edit_singleline(&mut self.api_key.key);
                     if ui.button("Submit").clicked() {
                         println!("Beans!");
+                        match self
+                            .set_api_key(&path::Path::new("secret.json"), self.api_key.key.clone())
+                        {
+                            Ok(_) => {
+                                ui.label("Api key Set!");
+                            }
+                            Err(e) => {
+                                ui.label(&e.to_string());
+                            }
+                        }
                     }
                 });
 
@@ -284,10 +336,6 @@ impl eframe::App for SpacePixUi {
                         println!("Save");
                     }
 
-                    if ui.button("Set API Key").clicked() {
-                        self.api_key_input_visible = true;
-                    }
-
                     if ui.button("Quit").clicked() {
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                     }
@@ -309,7 +357,12 @@ impl eframe::App for SpacePixUi {
                     if ui.button("DONKI").clicked() {
                         println!("DONKI Settings");
                     }
+
                     ui.separator();
+                    if ui.button("Set API Key").clicked() {
+                        self.api_key_input_visible = true;
+                    }
+
                     if ui.button("Theme").clicked() {
                         println!("Theme button clicked!");
                     }
