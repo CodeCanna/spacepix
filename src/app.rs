@@ -1,5 +1,5 @@
 use crate::apis::ApiKey;
-use crate::errors::{FailedToGetDataApod, FailedToGetDataNeows, SecretSauceFileNotFoundError};
+use crate::errors::{FailedToGetDataApod, FailedToGetDataNeows, SetAPIKeyFailed};
 use crate::{json_objects::NearEarthObject, Apod, Urls, NEOWS};
 use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
@@ -7,6 +7,7 @@ use egui::Image;
 use std::io::{Read, Write};
 use std::{fs, path};
 use std::{path::Path, vec};
+use json::object;
 
 const SAUCE_PATH: &str = "secret.json";
 
@@ -173,37 +174,14 @@ impl SpacePixUi {
         &mut self,
         secret_path: &Path,
         key: String,
-    ) -> Result<(), SecretSauceFileNotFoundError> {
-        match std::fs::File::open(secret_path) {
+    ) -> Result<(), SetAPIKeyFailed> {
+        match fs::File::create(SAUCE_PATH) {
             Ok(mut f) => {
-                let mut buff = String::default();
-                let _ = f.read_to_string(&mut buff);
-                let mut json_buff = json::parse(&buff).unwrap();
-                json_buff.insert("key", key).unwrap();
-
-                println!("{}", &json_buff.to_string());
-                match f.write_all(&json_buff.to_string().as_bytes()) {
-                    Ok(r) => Ok(r),
-                    Err(e) => {
-                        println!("{}", e);
-                        return Err(SecretSauceFileNotFoundError {})
-                    },
-                }
-            }
-            Err(_) => match fs::File::create(Path::new(SAUCE_PATH)) {
-                Ok(mut f) => {
-                    let mut buff = String::default();
-                    let _ = f.read_to_string(&mut buff);
-                    let mut json_buff = json::parse(&buff).unwrap();
-                    json_buff.insert("key", key).unwrap();
-
-                    match f.write(json_buff.to_string().as_bytes()) {
-                        Ok(_) => Ok(()),
-                        Err(_) => return Err(SecretSauceFileNotFoundError {}),
-                    }
-                }
-                Err(_) => return Err(SecretSauceFileNotFoundError {}),
+                let json_buff = object! {key: key};
+                let _ = f.write(json_buff.to_string().as_bytes());
+                Ok(())
             },
+            Err(_) => {return Err(SetAPIKeyFailed{})}
         }
     }
 
