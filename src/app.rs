@@ -170,7 +170,7 @@ impl SpacePixUi {
         secret_path: &Path,
         key: String,
     ) -> Result<(), SetAPIKeyFailed> {
-        match fs::File::create(SAUCE_PATH) {
+        match fs::File::create(secret_path) {
             Ok(mut f) => {
                 let json_buff = object! {key: key};
                 let _ = f.write(json_buff.to_string().as_bytes());
