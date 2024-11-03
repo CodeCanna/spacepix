@@ -60,3 +60,14 @@ impl Display for FailedToGetDataNeows {
         write!(f, "Failed to retrieve data for NeoWs")
     }
 }
+
+#[derive(Debug)]
+pub struct SetAPIKeyFailed {}
+impl Error for SetAPIKeyFailed {}
+
+
+impl Display for SetAPIKeyFailed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Failed to set API Key.")
+    }
+}
