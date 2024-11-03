@@ -1,10 +1,9 @@
-use crate::errors::{FailedToGetDataNeows, FailedToCreateSecretSauce, FailedToGetSecretSauce, SecretSauceFileNotFoundError};
+use crate::errors::{FailedToGetDataNeows, FailedToGetSecretSauce, SecretSauceFileNotFoundError};
 use chrono::{Local, NaiveDate};
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fs::File;
 use std::io::Read;
-use std::io::Write;
 use std::path::Path;
 use std::usize;
 
