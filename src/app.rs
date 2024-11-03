@@ -90,9 +90,6 @@ impl SpacePixUi {
                     Ok(r) => r.text().unwrap(),
                     Err(_) => return Err(FailedToGetDataApod {}),
                 };
-                //.expect("Failed to retrieve image from API...");
-
-                println!("{}", sauce);
 
                 let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
                 let image_data: (String, String) = (
@@ -165,8 +162,6 @@ impl SpacePixUi {
             );
             objects_vec.push(o);
         }
-
-        // println!("{}", json_data["near_earth_objects"][dates.0][0].pretty(4));
         Ok(objects_vec)
     }
 
@@ -280,7 +275,6 @@ impl SpacePixUi {
                     ui.heading("API Key not Found Enter it Below:");
                     ui.text_edit_singleline(&mut self.api_key.key);
                     if ui.button("Submit").clicked() {
-                        println!("Beans!");
                         match self
                             .set_api_key(&path::Path::new("secret.json"), self.api_key.key.clone())
                         {
