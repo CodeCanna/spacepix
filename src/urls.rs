@@ -31,14 +31,7 @@ impl Urls {
     pub fn get_secret_sauce() -> Result<String, FailedToGetSecretSauce> {
         let mut saucy_file = match File::open(Path::new(SAUCE_PATH)) {
             Ok(f) => f,
-            Err(_) => match File::create(Path::new(SAUCE_PATH)) {
-                Ok(mut f) => {
-                    let buff = String::from("{\"key\": \"API_KEY\"}");
-                    File::write(&mut f, buff.as_bytes()).unwrap();
-                    f
-                },
-                Err(_) => {return Err(FailedToGetSecretSauce{})}
-            }
+            Err(_) => {return Err(FailedToGetSecretSauce{})}
         };
 
         let mut sauce = String::default();
