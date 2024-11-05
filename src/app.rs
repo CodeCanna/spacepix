@@ -4,12 +4,10 @@ use crate::{json_objects::NearEarthObject, Apod, Urls, NEOWS};
 use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::{fs, path};
 use std::{path::Path, vec};
 use json::object;
-
-const SAUCE_PATH: &str = "secret.json";
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -125,11 +123,6 @@ impl SpacePixUi {
             Ok(d) => d.text(),
             Err(_) => return Err(FailedToGetDataNeows {}),
         };
-        // let data = reqwest::blocking::get(url)
-        //     .unwrap()
-        //     .text()
-        //     .or(Err(FailedToGetDataNeows {}));
-        //let json_data = json::parse(&data.unwrap());
 
         let json_data = match json::parse(&data.unwrap()) {
             Ok(jv) => jv,
@@ -320,10 +313,6 @@ impl eframe::App for SpacePixUi {
 
                     if ui.button("Asteroids - NeoWs").clicked() {
                         println!("NeoWs Settings");
-                        // Urls::build_url_neows(
-                        //     NaiveDate::from_ymd_opt(2020, 4, 7).unwrap(),
-                        //       NaiveDate::from_ymd_opt(2020, 4, 1).unwrap()
-                        // );
                     }
 
                     if ui.button("DONKI").clicked() {
