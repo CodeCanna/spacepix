@@ -424,3 +424,16 @@ impl eframe::App for SpacePixUi {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_get_neows_data_blocking() {
+        todo!()
+    }
+
+    #[test]
+    fn test_get_apod_data_blocking() {
+        todo!()
+    }
+}
