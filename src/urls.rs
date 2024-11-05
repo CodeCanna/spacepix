@@ -103,11 +103,11 @@ mod tests {
                     Ok(s) => {
                         assert_eq!(s, "TEST_KEY");
                     },
-                    Err(_) => panic!()
+                    Err(e) => panic!("{}", e)
                 }
-                Err(_) => panic!()
+                Err(e) => panic!("{}", e)
             }
-            Err(_) => panic!()
+            Err(e) => panic!("{}", e)
         }
     }
 
