@@ -265,7 +265,7 @@ impl SpacePixUi {
                 );
 
                 egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.heading("API Key not Found Enter it Below:");
+                    ui.heading("Enter your NASA API Key below.");
                     ui.text_edit_singleline(&mut self.api_key.key);
                     if ui.button("Submit").clicked() {
                         match self
@@ -277,6 +277,13 @@ impl SpacePixUi {
                             Err(e) => {
                                 ui.label(&e.to_string());
                             }
+                        }
+                    }
+                    
+                    if ui.link("Don't have a NASA API Key?").clicked() {
+                        match open::that("https://api.nasa.gov/") {
+                            Ok(_) => {},
+                            Err(_) => {ui.label("Failed to open web browser.");}
                         }
                     }
                 });
