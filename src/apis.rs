@@ -17,8 +17,8 @@ impl Default for ApiKey {
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
 pub struct Apod {
-    pub data: Option<(String, String)>,
-    pub cache: Option<(String, String)>
+    pub data: Option<(String, String, String, String, String, String)>,
+    pub cache: Option<(String, String, String, String, String, String)>
 }
 
 impl Default for Apod {
