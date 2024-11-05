@@ -4,12 +4,10 @@ use crate::{json_objects::NearEarthObject, Apod, Urls, NEOWS};
 use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::{fs, path};
 use std::{path::Path, vec};
 use json::object;
-
-const SAUCE_PATH: &str = "secret.json";
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -84,7 +82,6 @@ impl SpacePixUi {
                     Err(_) => return Err(FailedToGetDataApod {}),
                 };
                 let url = Urls::make_secret_sauce(&sauce).unwrap().apod;
-                //let data = reqwest::blocking::get(&url)?.text()?;
 
                 let data = match reqwest::blocking::get(&url) {
                     Ok(r) => r.text().unwrap(),
@@ -93,7 +90,7 @@ impl SpacePixUi {
 
                 let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
                 let image_data: (String, String) = (
-                    json_object["hdurl"].to_string(),
+                    json_object["url"].to_string(),
                     json_object["explanation"].to_string(),
                 );
 
@@ -125,11 +122,6 @@ impl SpacePixUi {
             Ok(d) => d.text(),
             Err(_) => return Err(FailedToGetDataNeows {}),
         };
-        // let data = reqwest::blocking::get(url)
-        //     .unwrap()
-        //     .text()
-        //     .or(Err(FailedToGetDataNeows {}));
-        //let json_data = json::parse(&data.unwrap());
 
         let json_data = match json::parse(&data.unwrap()) {
             Ok(jv) => jv,
@@ -170,7 +162,7 @@ impl SpacePixUi {
         secret_path: &Path,
         key: String,
     ) -> Result<(), SetAPIKeyFailed> {
-        match fs::File::create(SAUCE_PATH) {
+        match fs::File::create(secret_path) {
             Ok(mut f) => {
                 let json_buff = object! {key: key};
                 let _ = f.write(json_buff.to_string().as_bytes());
@@ -272,7 +264,7 @@ impl SpacePixUi {
                 );
 
                 egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.heading("API Key not Found Enter it Below:");
+                    ui.heading("Enter your NASA API Key below.");
                     ui.text_edit_singleline(&mut self.api_key.key);
                     if ui.button("Submit").clicked() {
                         match self
@@ -284,6 +276,13 @@ impl SpacePixUi {
                             Err(e) => {
                                 ui.label(&e.to_string());
                             }
+                        }
+                    }
+                    
+                    if ui.link("Don't have a NASA API Key?").clicked() {
+                        match open::that("https://api.nasa.gov/") {
+                            Ok(_) => {},
+                            Err(_) => {ui.label("Failed to open web browser.");}
                         }
                     }
                 });
@@ -320,10 +319,6 @@ impl eframe::App for SpacePixUi {
 
                     if ui.button("Asteroids - NeoWs").clicked() {
                         println!("NeoWs Settings");
-                        // Urls::build_url_neows(
-                        //     NaiveDate::from_ymd_opt(2020, 4, 7).unwrap(),
-                        //       NaiveDate::from_ymd_opt(2020, 4, 1).unwrap()
-                        // );
                     }
 
                     if ui.button("DONKI").clicked() {
@@ -426,5 +421,18 @@ impl eframe::App for SpacePixUi {
         if self.about_window_visible {
             self.show_about(&ctx);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_get_neows_data_blocking() {
+        todo!()
+    }
+
+    #[test]
+    fn test_get_apod_data_blocking() {
+        todo!()
     }
 }
