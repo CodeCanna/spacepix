@@ -231,11 +231,11 @@ impl SpacePixUi {
         );
     }
 
-    fn show_apod_full(&mut self, img: &Image, ctx: &egui::Context) {
+    fn show_apod_full(&mut self, img: &Image, image_name: &String, image_cr: &String, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("apod_viewport"),
             egui::ViewportBuilder::default()
-                .with_title("Astronomy Picture of the Day Full Size")
+                .with_title(format!("{} (By {})", &image_name, &image_cr.replace("\n", "")))
                 .with_maximized(true),
             |ctx, class| {
                 assert!(
@@ -359,7 +359,7 @@ impl eframe::App for SpacePixUi {
                             Ok(data) => {
                                 //ui.heading(data.4);
                                 ui.heading(
-                                    RichText::new(data.4).font(FontId::monospace(20.0)),
+                                    RichText::new(&data.4).font(FontId::monospace(20.0)),
                                 );
                                 if ui
                                     .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
@@ -369,7 +369,7 @@ impl eframe::App for SpacePixUi {
                                 {
                                     self.apod_full_window_visible = true;
                                 }
-                                ui.label(format!("Copyright:{}", data.0));
+                                ui.label(format!("Copyright: {}", data.0.replace("\n", "")));
                                 ui.heading(
                                     RichText::new("Description:").font(FontId::monospace(30.0)),
                                 );
@@ -378,7 +378,7 @@ impl eframe::App for SpacePixUi {
                                     ui.label(RichText::new(&data.2).font(FontId::monospace(17.0)));
                                 });
                                 if self.apod_full_window_visible {
-                                    self.show_apod_full(&egui::Image::from_uri(&data.3), &ctx);
+                                    self.show_apod_full(&egui::Image::from_uri(&data.3), &data.4, &data.0, &ctx);
                                 }
                             }
                             Err(_) => {
