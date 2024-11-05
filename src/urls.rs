@@ -30,15 +30,17 @@ impl Urls {
     pub fn get_secret_sauce() -> Result<String, FailedToGetSecretSauce> {
         let mut saucy_file = match File::open(Path::new(SAUCE_PATH)) {
             Ok(f) => f,
-            Err(_) => {return Err(FailedToGetSecretSauce{})}
+            Err(_) => return Err(FailedToGetSecretSauce {}),
         };
 
         let mut sauce = String::default();
-        let _ = saucy_file.read_to_string(&mut sauce).or(Err(FailedToGetSecretSauce{}));
+        let _ = saucy_file
+            .read_to_string(&mut sauce)
+            .or(Err(FailedToGetSecretSauce {}));
 
         match json::parse(&sauce) {
             Ok(s) => Ok(s["key"].to_string()),
-            Err(_) => {return Err(FailedToGetSecretSauce{})}
+            Err(_) => return Err(FailedToGetSecretSauce {}),
         }
     }
 
@@ -79,17 +81,20 @@ impl Display for Urls {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
     use super::*;
+    use std::io::Write;
 
     #[test]
     fn test_make_secret_sauce() {
         match Urls::make_secret_sauce("TEST_KEY") {
             Ok(s) => {
-                assert_eq!(s.apod, "https://api.nasa.gov/planetary/apod?api_key=TEST_KEY");
+                assert_eq!(
+                    s.apod,
+                    "https://api.nasa.gov/planetary/apod?api_key=TEST_KEY"
+                );
                 assert_eq!(s.neows, "https://api.nasa.gov/neo/rest/v1/feed?start_date=START_DATE&end_date=END_DATE&api_key=TEST_KEY");
                 assert_eq!(s.donki, "https://api.nasa.gov/DONKI/CME?startDate=yyyy-MM-dd&endDate=yyyy-MM-dd&api_key=TEST_KEY")
-            },
+            }
             Err(_e) => {}
         }
     }
@@ -102,27 +107,38 @@ mod tests {
                 Ok(_) => match Urls::get_secret_sauce() {
                     Ok(s) => {
                         assert_eq!(s, "TEST_KEY");
-                    },
-                    Err(e) => panic!("{}", e)
-                }
-                Err(e) => panic!("{}", e)
-            }
-            Err(e) => panic!("{}", e)
+                    }
+                    Err(e) => panic!("{}", e),
+                },
+                Err(e) => panic!("{}", e),
+            },
+            Err(e) => panic!("{}", e),
         }
     }
 
     #[test]
     fn test_urls() {
-        assert_eq!(Urls::urls().apod, "https://api.nasa.gov/planetary/apod?api_key=");
+        assert_eq!(
+            Urls::urls().apod,
+            "https://api.nasa.gov/planetary/apod?api_key="
+        );
         assert_eq!(Urls::urls().neows, "https://api.nasa.gov/neo/rest/v1/feed?start_date=START_DATE&end_date=END_DATE&api_key=");
-        assert_eq!(Urls::urls().donki, "https://api.nasa.gov/DONKI/CME?startDate=yyyy-MM-dd&endDate=yyyy-MM-dd&api_key=");
+        assert_eq!(
+            Urls::urls().donki,
+            "https://api.nasa.gov/DONKI/CME?startDate=yyyy-MM-dd&endDate=yyyy-MM-dd&api_key="
+        );
     }
 
     #[test]
     fn test_build_url_neows() {
-        match Urls::build_url_neows(NaiveDate::from_ymd_opt(2024, 10, 1).unwrap(), NaiveDate::from_ymd_opt(2024, 10, 7).unwrap()) {
-            Ok(u) => {assert_eq!(u, "https://api.nasa.gov/neo/rest/v1/feed?start_date=2024-10-01&end_date=2024-10-07&api_key=TEST_KEY")},
+        match Urls::build_url_neows(
+            NaiveDate::from_ymd_opt(2024, 10, 1).unwrap(),
+            NaiveDate::from_ymd_opt(2024, 10, 7).unwrap(),
+        ) {
+            Ok(u) => {
+                assert_eq!(u, "https://api.nasa.gov/neo/rest/v1/feed?start_date=2024-10-01&end_date=2024-10-07&api_key=TEST_KEY")
+            }
             Err(_) => {}
-        } 
+        }
     }
 }

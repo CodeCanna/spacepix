@@ -46,9 +46,9 @@ pub struct SecretSauceFileReadError {}
 impl Error for SecretSauceFileReadError {}
 
 impl Display for SecretSauceFileReadError {
- fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-     write!(f, "Failed to read Secret Sauce file!")
- }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Failed to read Secret Sauce file!")
+    }
 }
 
 #[derive(Debug)]
@@ -64,7 +64,6 @@ impl Display for FailedToGetDataNeows {
 #[derive(Debug)]
 pub struct SetAPIKeyFailed {}
 impl Error for SetAPIKeyFailed {}
-
 
 impl Display for SetAPIKeyFailed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
