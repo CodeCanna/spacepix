@@ -82,7 +82,6 @@ impl SpacePixUi {
                     Err(_) => return Err(FailedToGetDataApod {}),
                 };
                 let url = Urls::make_secret_sauce(&sauce).unwrap().apod;
-                //let data = reqwest::blocking::get(&url)?.text()?;
 
                 let data = match reqwest::blocking::get(&url) {
                     Ok(r) => r.text().unwrap(),
@@ -91,7 +90,7 @@ impl SpacePixUi {
 
                 let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
                 let image_data: (String, String) = (
-                    json_object["hdurl"].to_string(),
+                    json_object["url"].to_string(),
                     json_object["explanation"].to_string(),
                 );
 
