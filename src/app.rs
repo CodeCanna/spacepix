@@ -18,7 +18,7 @@ pub struct SpacePixUi {
     apod: Apod,
     neows: NEOWS,
     api_key: ApiKey,
-    apod_cache: Option<(String, String)>,
+    apod_cache: Option<(String, String, String, String, String, String)>,
     neows_cache: Option<String>,
     about_window_visible: bool,
     api_key_input_visible: bool,
@@ -72,7 +72,7 @@ impl SpacePixUi {
         Ok(image_data)
     }
 
-    pub fn get_apod_data_blocking(&mut self) -> Result<(String, String), FailedToGetDataApod> {
+    pub fn get_apod_data_blocking(&mut self) -> Result<(String, String, String, String, String , String), FailedToGetDataApod> {
         match &self.apod.cache {
             Some(cache) => Ok(cache.clone()),
             None => {
@@ -89,9 +89,13 @@ impl SpacePixUi {
                 };
 
                 let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
-                let image_data: (String, String) = (
-                    json_object["url"].to_string(),
-                    json_object["explanation"].to_string(),
+                let image_data= (
+                    json_object["copyright"].to_string(), // Cppyright
+                    json_object["date"].to_string(), // Date
+                    json_object["explanation"].to_string(), // Explanation
+                    json_object["hdurl"].to_string(), // hdurl
+                    json_object["title"].to_string(), // Title
+                    json_object["url"].to_string(), // url
                 );
 
                 self.apod.cache = Some(image_data.clone()); // Cache the image
@@ -353,23 +357,28 @@ impl eframe::App for SpacePixUi {
                         let image_data = self.get_apod_data_blocking();
                         match image_data {
                             Ok(data) => {
+                                //ui.heading(data.4);
+                                ui.heading(
+                                    RichText::new(data.4).font(FontId::monospace(20.0)),
+                                );
                                 if ui
                                     .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
-                                        &data.0,
+                                        &data.5,
                                     )))
                                     .clicked()
                                 {
                                     self.apod_full_window_visible = true;
                                 }
+                                ui.label(format!("Copyright:{}", data.0));
                                 ui.heading(
                                     RichText::new("Description:").font(FontId::monospace(30.0)),
                                 );
                                 ui.separator();
                                 egui::ScrollArea::vertical().show(ui, |ui| {
-                                    ui.label(RichText::new(&data.1).font(FontId::monospace(17.0)));
+                                    ui.label(RichText::new(&data.2).font(FontId::monospace(17.0)));
                                 });
                                 if self.apod_full_window_visible {
-                                    self.show_apod_full(&egui::Image::from_uri(&data.0), &ctx);
+                                    self.show_apod_full(&egui::Image::from_uri(&data.3), &ctx);
                                 }
                             }
                             Err(_) => {
@@ -433,6 +442,11 @@ mod tests {
 
     #[test]
     fn test_get_apod_data_blocking() {
+        todo!()
+    }
+
+    #[test]
+    fn test_set_api_key() {
         todo!()
     }
 }
