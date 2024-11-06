@@ -4,10 +4,10 @@ use crate::{json_objects::NearEarthObject, Apod, Urls, NEOWS};
 use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
+use json::object;
 use std::io::Write;
 use std::{fs, path};
 use std::{path::Path, vec};
-use json::object;
 
 // This is the object that the view port will represent
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -72,7 +72,9 @@ impl SpacePixUi {
         Ok(image_data)
     }
 
-    pub fn get_apod_data_blocking(&mut self) -> Result<(String, String, String, String, String , String), FailedToGetDataApod> {
+    pub fn get_apod_data_blocking(
+        &mut self,
+    ) -> Result<(String, String, String, String, String, String), FailedToGetDataApod> {
         match &self.apod.cache {
             Some(cache) => Ok(cache.clone()),
             None => {
@@ -89,13 +91,13 @@ impl SpacePixUi {
                 };
 
                 let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
-                let image_data= (
-                    json_object["copyright"].to_string(), // Cppyright
-                    json_object["date"].to_string(), // Date
+                let image_data = (
+                    json_object["copyright"].to_string(),   // Cppyright
+                    json_object["date"].to_string(),        // Date
                     json_object["explanation"].to_string(), // Explanation
-                    json_object["hdurl"].to_string(), // hdurl
-                    json_object["title"].to_string(), // Title
-                    json_object["url"].to_string(), // url
+                    json_object["hdurl"].to_string(),       // hdurl
+                    json_object["title"].to_string(),       // Title
+                    json_object["url"].to_string(),         // url
                 );
 
                 self.apod.cache = Some(image_data.clone()); // Cache the image
@@ -161,18 +163,14 @@ impl SpacePixUi {
         Ok(objects_vec)
     }
 
-    fn set_api_key(
-        &mut self,
-        secret_path: &Path,
-        key: String,
-    ) -> Result<(), SetAPIKeyFailed> {
+    fn set_api_key(&mut self, secret_path: &Path, key: String) -> Result<(), SetAPIKeyFailed> {
         match fs::File::create(secret_path) {
             Ok(mut f) => {
                 let json_buff = object! {key: key};
                 let _ = f.write(json_buff.to_string().as_bytes());
                 Ok(())
-            },
-            Err(_) => {return Err(SetAPIKeyFailed{})}
+            }
+            Err(_) => return Err(SetAPIKeyFailed {}),
         }
     }
 
@@ -231,11 +229,21 @@ impl SpacePixUi {
         );
     }
 
-    fn show_apod_full(&mut self, img: &Image, image_name: &String, image_cr: &String, ctx: &egui::Context) {
+    fn show_apod_full(
+        &mut self,
+        img: &Image,
+        image_name: &String,
+        image_cr: &String,
+        ctx: &egui::Context,
+    ) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("apod_viewport"),
             egui::ViewportBuilder::default()
-                .with_title(format!("{} (By {})", &image_name, &image_cr.replace("\n", "")))
+                .with_title(format!(
+                    "{} (By {})",
+                    &image_name,
+                    &image_cr.replace("\n", "")
+                ))
                 .with_maximized(true),
             |ctx, class| {
                 assert!(
@@ -282,11 +290,13 @@ impl SpacePixUi {
                             }
                         }
                     }
-                    
+
                     if ui.link("Don't have a NASA API Key?").clicked() {
                         match open::that("https://api.nasa.gov/") {
-                            Ok(_) => {},
-                            Err(_) => {ui.label("Failed to open web browser.");}
+                            Ok(_) => {}
+                            Err(_) => {
+                                ui.label("Failed to open web browser.");
+                            }
                         }
                     }
                 });
@@ -358,9 +368,7 @@ impl eframe::App for SpacePixUi {
                         match image_data {
                             Ok(data) => {
                                 //ui.heading(data.4);
-                                ui.heading(
-                                    RichText::new(&data.4).font(FontId::monospace(20.0)),
-                                );
+                                ui.heading(RichText::new(&data.4).font(FontId::monospace(20.0)));
                                 if ui
                                     .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
                                         &data.5,
@@ -378,7 +386,12 @@ impl eframe::App for SpacePixUi {
                                     ui.label(RichText::new(&data.2).font(FontId::monospace(17.0)));
                                 });
                                 if self.apod_full_window_visible {
-                                    self.show_apod_full(&egui::Image::from_uri(&data.3), &data.4, &data.0, &ctx);
+                                    self.show_apod_full(
+                                        &egui::Image::from_uri(&data.3),
+                                        &data.4,
+                                        &data.0,
+                                        &ctx,
+                                    );
                                 }
                             }
                             Err(_) => {
@@ -406,16 +419,34 @@ impl eframe::App for SpacePixUi {
                             self.neows.end_date.clone(),
                         )) {
                             Ok(data) => {
+                                self.neows.neows.clear(); // Clear old data
                                 for object in data {
-                                    println!("{}", object.asteroid_id);
-                                    ui.add(egui::Label::new(object.asteroid_id));
+                                    //println!("{}", object.asteroid_id);
+                                    self.neows.neows.push(object);
                                 }
+                                dbg!(&self.neows.neows);
                             }
                             Err(_) => {
                                 self.neows_invalid_input_window_visible = true;
                             }
                         }
                     }
+
+                    ui.separator();
+
+                    // Display any NeoWs
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        for object in &self.neows.neows {
+                            ui.heading(&object.name);
+                            ui.add(egui::Label::new(format!("Asteroid Id: {}", &object.asteroid_id)));
+                            ui.label(format!("Near Miss Date: {}", &object.close_approach_time));
+                            ui.label(format!("Distance Min: {} miles from Earth\nDistance Max: {} miles from Earth", &object.estimated_diameter.0, &object.estimated_diameter.1));
+                            ui.label(format!("Relative Velocity: {} miles per hour", object.relative_velocity));
+                            ui.label(format!("Estimated Diameter: (min{}/max{}", object.estimated_diameter.0, object.estimated_diameter.1));
+                            ui.label(format!("Deemed hazardous by NASA: {}", object.is_potentially_hazardous_asteroid));
+                            ui.separator();
+                        }
+                    });
                 });
             }); // NEOWS //
         });

@@ -11,7 +11,7 @@ mod json_objects {
     pub struct NearEarthObject {
         pub asteroid_id: String,
         pub name: String,
-        pub estimagted_diameter: (String, String), // (min, max)
+        pub estimated_diameter: (String, String), // (min, max)
         pub is_potentially_hazardous_asteroid: bool,
         pub close_approach_date: String,
         pub close_approach_time: String,
@@ -24,7 +24,7 @@ mod json_objects {
         pub fn new(
             asteroid_id: String,
             name: String,
-            estimagted_diameter: (String, String), // (min, max)
+            estimated_diameter: (String, String), // (min, max)
             is_potentially_hazardous_asteroid: bool,
             close_approach_date: String,
             close_approach_time: String,
@@ -35,7 +35,7 @@ mod json_objects {
             Self {
                 asteroid_id,
                 name,
-                estimagted_diameter,
+                estimated_diameter,
                 is_potentially_hazardous_asteroid,
                 close_approach_date,
                 close_approach_time,
