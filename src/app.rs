@@ -432,10 +432,19 @@ impl eframe::App for SpacePixUi {
                         }
                     }
 
+                    ui.separator();
+
                     // Display any NeoWs
                     egui::ScrollArea::vertical().show(ui, |ui| {
                         for object in &self.neows.neows {
-                            ui.add(egui::Label::new(&object.asteroid_id));
+                            ui.heading(&object.name);
+                            ui.add(egui::Label::new(format!("Asteroid Id: {}", &object.asteroid_id)));
+                            ui.label(format!("Near Miss Date: {}", &object.close_approach_time));
+                            ui.label(format!("Distance Min: {} miles from Earth\nDistance Max: {} miles from Earth", &object.estimated_diameter.0, &object.estimated_diameter.1));
+                            ui.label(format!("Relative Velocity: {} miles per hour", object.relative_velocity));
+                            ui.label(format!("Estimated Diameter: (min{}/max{}", object.estimated_diameter.0, object.estimated_diameter.1));
+                            ui.label(format!("Deemed hazardous by NASA: {}", object.is_potentially_hazardous_asteroid));
+                            ui.separator();
                         }
                     });
                 });
