@@ -419,16 +419,25 @@ impl eframe::App for SpacePixUi {
                             self.neows.end_date.clone(),
                         )) {
                             Ok(data) => {
+                                self.neows.neows.clear(); // Clear old data
                                 for object in data {
-                                    println!("{}", object.asteroid_id);
-                                    ui.add(egui::Label::new(object.asteroid_id));
+                                    //println!("{}", object.asteroid_id);
+                                    self.neows.neows.push(object);
                                 }
+                                dbg!(&self.neows.neows);
                             }
                             Err(_) => {
                                 self.neows_invalid_input_window_visible = true;
                             }
                         }
                     }
+
+                    // Display any NeoWs
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        for object in &self.neows.neows {
+                            ui.add(egui::Label::new(&object.asteroid_id));
+                        }
+                    });
                 });
             }); // NEOWS //
         });
