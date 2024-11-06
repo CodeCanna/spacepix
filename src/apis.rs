@@ -1,3 +1,5 @@
+use crate::json_objects::NearEarthObject;
+
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
@@ -36,6 +38,7 @@ impl Default for Apod {
 pub struct NEOWS {
     pub start_date: String,
     pub end_date: String,
+    pub neows: Vec<NearEarthObject>
 }
 
 impl Default for NEOWS {
@@ -43,6 +46,7 @@ impl Default for NEOWS {
         Self {
             start_date: String::default(),
             end_date: String::default(),
+            neows: Vec::default()
         }
     }
 }
