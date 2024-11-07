@@ -1,5 +1,5 @@
 all:
-	cargo build && cargo build --target x86_64-pc-windows-gnu
+	cargo build --release && cargo build --target x86_64-pc-windows-gnu --release
 
 linux:
 	cargo build --release
@@ -8,8 +8,8 @@ linuxdev:
 	cargo build
 
 windows:
-	cargo build --target x86_64-pc-windows-gnu
+	cargo build --target x86_64-pc-windows-gnu --release
 
 windowsdev:
-	cargo build --target x86_64-pc-windows-gnu --release
+	cargo build --target x86_64-pc-windows-gnu
 
