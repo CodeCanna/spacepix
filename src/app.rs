@@ -138,10 +138,10 @@ impl SpacePixUi {
         let mut objects_vec: Vec<NearEarthObject> = vec![];
 
         for object in objects {
-            println!(
-                "Relative Velocity: {}",
-                object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string()
-            );
+            // println!(
+            //     "Relative Velocity: {}",
+            //     object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string()
+            // );
             let o = NearEarthObject::new(
                 object["id"].to_string(),
                 object["name"].to_string(),
@@ -321,12 +321,6 @@ impl eframe::App for SpacePixUi {
                         println!("Save");
                     }
 
-                    if ui.button("Quit").clicked() {
-                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                    }
-                });
-
-                ui.menu_button("Settings", |ui| {
                     if ui.button("APOD").clicked() {
                         println!("APOD Settings");
                     }
@@ -340,6 +334,13 @@ impl eframe::App for SpacePixUi {
                     }
 
                     ui.separator();
+
+                    if ui.button("Quit").clicked() {
+                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                    }
+                });
+
+                ui.menu_button("Settings", |ui| {
                     if ui.button("Set API Key").clicked() {
                         self.api_key_input_visible = true;
                     }
