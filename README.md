@@ -16,6 +16,10 @@ Spacepix uses `Make` and `cargo` to build and run:
 * `make windows` Builds for Windows x64 optimized uses `--release`
 * `make windowsdev` Builds for Windows x64 unoptimized
 
-
 ### To Run Spacepix
+
+#### Running with Cargo
 If you just want to run Spacepix you can use `cargo run` or `cargo run --release` (optimizations)
+
+#### Running with Make
+You can run Spacepix with Make using `make run` or `make rrun` for optimizations using `--release`
