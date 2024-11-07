@@ -442,7 +442,7 @@ impl eframe::App for SpacePixUi {
                             ui.label(format!("Near Miss Date: {}", &object.close_approach_time));
                             ui.label(format!("Distance Min: {} miles from Earth\nDistance Max: {} miles from Earth", &object.estimated_diameter.0, &object.estimated_diameter.1));
                             ui.label(format!("Relative Velocity: {} miles per hour", object.relative_velocity));
-                            ui.label(format!("Estimated Diameter: (min{}/max{}", object.estimated_diameter.0, object.estimated_diameter.1));
+                            ui.label(format!("Estimated Diameter: (min {} feet\nmax {} feet", object.estimated_diameter.0, object.estimated_diameter.1));
                             ui.label(format!("Deemed hazardous by NASA: {}", object.is_potentially_hazardous_asteroid));
                             ui.separator();
                         }
