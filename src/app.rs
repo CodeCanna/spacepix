@@ -438,7 +438,12 @@ impl eframe::App for SpacePixUi {
                     // Display any NeoWs
                     egui::ScrollArea::vertical().show(ui, |ui| {
                         for object in &self.neows.neows {
-                            ui.heading(&object.name);
+                            if ui.link(&object.name.replace("(", "").replace(")", "")).clicked() {
+                                match open::that(format!("https://eyes.nasa.gov/apps/asteroids/#/{}", &object.name.replace(" ", "_").replace("(", "").replace(")", "").to_lowercase())) {
+                                    Ok(_) => {println!()},
+                                    Err(e) => { ui.label(&e.to_string()); }
+                                }
+                            }
                             ui.add(egui::Label::new(format!("Asteroid Id: {}", &object.asteroid_id)));
                             ui.label(format!("Near Miss Date: {}", &object.close_approach_time));
                             ui.label(format!("Distance Min: {} miles from Earth\nDistance Max: {} miles from Earth", &object.estimated_diameter.0, &object.estimated_diameter.1));
