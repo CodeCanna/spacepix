@@ -138,10 +138,6 @@ impl SpacePixUi {
         let mut objects_vec: Vec<NearEarthObject> = vec![];
 
         for object in objects {
-            // println!(
-            //     "Relative Velocity: {}",
-            //     object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string()
-            // );
             let o = NearEarthObject::new(
                 object["id"].to_string(),
                 object["name"].to_string(),
@@ -319,40 +315,48 @@ impl eframe::App for SpacePixUi {
                 ui.menu_button("File", |ui| {
                     if ui.button("Save").clicked() {
                         println!("Save");
+                        ui.close_menu();
                     }
 
                     if ui.button("APOD").clicked() {
                         println!("APOD Settings");
+                        ui.close_menu();
                     }
 
                     if ui.button("Asteroids - NeoWs").clicked() {
                         println!("NeoWs Settings");
+                        ui.close_menu();
                     }
 
                     if ui.button("DONKI").clicked() {
                         println!("DONKI Settings");
+                        ui.close_menu();
                     }
 
                     ui.separator();
 
                     if ui.button("Quit").clicked() {
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                        ui.close_menu();
                     }
                 });
 
                 ui.menu_button("Settings", |ui| {
                     if ui.button("Set API Key").clicked() {
                         self.api_key_input_visible = true;
+                        ui.close_menu();
                     }
 
                     if ui.button("Theme").clicked() {
                         println!("Theme button clicked!");
+                        ui.close_menu();
                     }
                 });
 
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
                         self.about_window_visible = true; // Set about_window_visible to true so on next update() it will come up.
+                        ui.close_menu();
                     }
                 });
             });
@@ -422,7 +426,6 @@ impl eframe::App for SpacePixUi {
                             Ok(data) => {
                                 self.neows.neows.clear(); // Clear old data
                                 for object in data {
-                                    //println!("{}", object.asteroid_id);
                                     self.neows.neows.push(object);
                                 }
                                 dbg!(&self.neows.neows);
@@ -438,7 +441,12 @@ impl eframe::App for SpacePixUi {
                     // Display any NeoWs
                     egui::ScrollArea::vertical().show(ui, |ui| {
                         for object in &self.neows.neows {
-                            ui.heading(&object.name);
+                            if ui.link(&object.name.replace("(", "").replace(")", "")).clicked() {
+                                match open::that(format!("https://eyes.nasa.gov/apps/asteroids/#/{}", &object.name.replace(" ", "_").replace("(", "").replace(")", "").to_lowercase())) {
+                                    Ok(_) => {},
+                                    Err(e) => { ui.label(&e.to_string()); }
+                                }
+                            }
                             ui.add(egui::Label::new(format!("Asteroid Id: {}", &object.asteroid_id)));
                             ui.label(format!("Near Miss Date: {}", &object.close_approach_time));
                             ui.label(format!("Distance Min: {} miles from Earth\nDistance Max: {} miles from Earth", &object.estimated_diameter.0, &object.estimated_diameter.1));
