@@ -319,40 +319,48 @@ impl eframe::App for SpacePixUi {
                 ui.menu_button("File", |ui| {
                     if ui.button("Save").clicked() {
                         println!("Save");
+                        ui.close_menu();
                     }
 
                     if ui.button("APOD").clicked() {
                         println!("APOD Settings");
+                        ui.close_menu();
                     }
 
                     if ui.button("Asteroids - NeoWs").clicked() {
                         println!("NeoWs Settings");
+                        ui.close_menu();
                     }
 
                     if ui.button("DONKI").clicked() {
                         println!("DONKI Settings");
+                        ui.close_menu();
                     }
 
                     ui.separator();
 
                     if ui.button("Quit").clicked() {
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                        ui.close_menu();
                     }
                 });
 
                 ui.menu_button("Settings", |ui| {
                     if ui.button("Set API Key").clicked() {
                         self.api_key_input_visible = true;
+                        ui.close_menu();
                     }
 
                     if ui.button("Theme").clicked() {
                         println!("Theme button clicked!");
+                        ui.close_menu();
                     }
                 });
 
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
                         self.about_window_visible = true; // Set about_window_visible to true so on next update() it will come up.
+                        ui.close_menu();
                     }
                 });
             });
