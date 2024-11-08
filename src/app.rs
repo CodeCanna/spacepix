@@ -138,10 +138,6 @@ impl SpacePixUi {
         let mut objects_vec: Vec<NearEarthObject> = vec![];
 
         for object in objects {
-            // println!(
-            //     "Relative Velocity: {}",
-            //     object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string()
-            // );
             let o = NearEarthObject::new(
                 object["id"].to_string(),
                 object["name"].to_string(),
@@ -422,7 +418,6 @@ impl eframe::App for SpacePixUi {
                             Ok(data) => {
                                 self.neows.neows.clear(); // Clear old data
                                 for object in data {
-                                    //println!("{}", object.asteroid_id);
                                     self.neows.neows.push(object);
                                 }
                                 dbg!(&self.neows.neows);
@@ -440,7 +435,7 @@ impl eframe::App for SpacePixUi {
                         for object in &self.neows.neows {
                             if ui.link(&object.name.replace("(", "").replace(")", "")).clicked() {
                                 match open::that(format!("https://eyes.nasa.gov/apps/asteroids/#/{}", &object.name.replace(" ", "_").replace("(", "").replace(")", "").to_lowercase())) {
-                                    Ok(_) => {println!()},
+                                    Ok(_) => {},
                                     Err(e) => { ui.label(&e.to_string()); }
                                 }
                             }
