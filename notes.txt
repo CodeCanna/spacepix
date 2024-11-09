@@ -1,9 +1,0 @@
-View order from the top down:
-Image
-Description
-Buttons
-
-Button Order:
-Previous Save Next
-
-The user should be able to click next virtually an infinite amount of tiems to get a new space picture curtosey of NASA, along with a description.  The user should have the ability to save this image to a file which can be viewed from spacepix offline.
