@@ -233,7 +233,7 @@ impl SpacePixUi {
         &mut self,
         img: &Image,
         image_name: &String,
-        image_cr: &String,
+        image_credit: &String,
         ctx: &egui::Context,
     ) {
         ctx.show_viewport_immediate(
@@ -242,7 +242,7 @@ impl SpacePixUi {
                 .with_title(format!(
                     "{} (By {})",
                     &image_name,
-                    &image_cr.replace("\n", "")
+                    &image_credit.replace("\n", "")
                 ))
                 .with_maximized(true),
             |ctx, class| {
@@ -373,8 +373,8 @@ impl eframe::App for SpacePixUi {
                 .show(ctx, |ui| {
                     // APOD Window //
                     egui::Frame::default().show(ui, |ui| {
-                        let image_data = self.get_apod_data_blocking();
-                        match image_data {
+                        //let image_data = self.get_apod_data_blocking();
+                        match self.get_apod_data_blocking() {
                             Ok(data) => {
                                 //ui.heading(data.4);
                                 ui.heading(RichText::new(&data.4).font(FontId::monospace(20.0)));
