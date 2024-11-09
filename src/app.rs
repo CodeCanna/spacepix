@@ -121,8 +121,8 @@ impl SpacePixUi {
             true => naive_start_date,
             false => match NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d") {
                 Ok(date) => date,
-                Err(_) => return Err(FailedToGetDataNeows{})
-            }
+                Err(_) => return Err(FailedToGetDataNeows {}),
+            },
         };
 
         // let naive_end_date = match NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d") {
@@ -387,6 +387,7 @@ impl eframe::App for SpacePixUi {
                                     .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
                                         &data.5,
                                     )))
+                                    .on_hover_cursor(egui::CursorIcon::PointingHand)
                                     .clicked()
                                 {
                                     self.apod_full_window_visible = true;
