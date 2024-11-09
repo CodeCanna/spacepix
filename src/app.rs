@@ -420,6 +420,7 @@ impl eframe::App for SpacePixUi {
                 egui::Frame::default().show(ui, |ui| {
                     ui.label("Start and End dates must be within 7 days of eachother.");
                     ui.label("If you only want to search for one day, only enter a start date, and leave end date empty.");
+                    ui.label("Date format: YYYY-MM-DD");
 
                     ui.label("Start Date:");
                     ui.text_edit_singleline(&mut self.neows.start_date);
