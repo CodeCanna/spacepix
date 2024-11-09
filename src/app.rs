@@ -116,10 +116,19 @@ impl SpacePixUi {
             Err(_) => return Err(FailedToGetDataNeows {}),
         };
 
-        let naive_end_date = match NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d") {
-            Ok(date) => date,
-            Err(_) => return Err(FailedToGetDataNeows {}),
+        // Allow user to enter only one date, or a range
+        let naive_end_date = match dates.1.is_empty() {
+            true => naive_start_date,
+            false => match NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d") {
+                Ok(date) => date,
+                Err(_) => return Err(FailedToGetDataNeows{})
+            }
         };
+
+        // let naive_end_date = match NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d") {
+        //     Ok(date) => date,
+        //     Err(_) => return Err(FailedToGetDataNeows {}),
+        // };
 
         let url =
             Urls::build_url_neows(naive_start_date, naive_end_date).unwrap_or("fail".to_string());
@@ -409,7 +418,8 @@ impl eframe::App for SpacePixUi {
             egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| {
                 // NEOWS //
                 egui::Frame::default().show(ui, |ui| {
-                    ui.label("NEOWS!!");
+                    ui.label("Start and End dates must be within 7 days of eachother.");
+                    ui.label("If you only want to search for one day, only enter a start date, and leave end date empty.");
 
                     ui.label("Start Date:");
                     ui.text_edit_singleline(&mut self.neows.start_date);
