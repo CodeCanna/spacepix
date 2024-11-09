@@ -1,3 +1,4 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 use egui;
 
 fn load_icon(path: &str) -> egui::IconData {
