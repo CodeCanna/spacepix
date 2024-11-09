@@ -277,6 +277,7 @@ impl SpacePixUi {
 
                 egui::CentralPanel::default().show(ctx, |ui| {
                     ui.heading("Enter your NASA API Key below.");
+                    ui.label("NOTE: Type DEMO_KEY to use the demo key, with limitations.");
                     ui.text_edit_singleline(&mut self.api_key.key);
                     if ui.button("Submit").clicked() {
                         match self
