@@ -125,11 +125,6 @@ impl SpacePixUi {
             },
         };
 
-        // let naive_end_date = match NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d") {
-        //     Ok(date) => date,
-        //     Err(_) => return Err(FailedToGetDataNeows {}),
-        // };
-
         let url =
             Urls::build_url_neows(naive_start_date, naive_end_date).unwrap_or("fail".to_string());
 
