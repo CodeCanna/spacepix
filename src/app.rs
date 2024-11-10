@@ -276,32 +276,37 @@ impl SpacePixUi {
                 );
 
                 egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.heading("Enter your NASA API Key below.");
-                    ui.label("NOTE: Type DEMO_KEY to use the demo key, with limitations.");
-                    ui.text_edit_singleline(&mut self.api_key.key);
-                    if ui.button("Submit").clicked() {
-                        match self
-                            .set_api_key(&path::Path::new("secret.json"), self.api_key.key.clone())
-                        {
-                            Ok(_) => {
-                                ui.label("Api key Set!");
+                    ui.with_layout(
+                        egui::Layout::top_down_justified(egui::Align::Center),
+                        |ui| {
+                            ui.heading("Enter your NASA API Key below.");
+                            ui.label("NOTE: Type DEMO_KEY to use the demo key, with limitations.");
+                            ui.text_edit_singleline(&mut self.api_key.key);
+                            if ui.button("Submit").clicked() {
+                                match self.set_api_key(
+                                    &path::Path::new("secret.json"),
+                                    self.api_key.key.clone(),
+                                ) {
+                                    Ok(_) => {
+                                        ui.label("Api key Set!");
+                                    }
+                                    Err(e) => {
+                                        ui.label(&e.to_string());
+                                    }
+                                }
                             }
-                            Err(e) => {
-                                ui.label(&e.to_string());
-                            }
-                        }
-                    }
 
-                    if ui.link("Don't have a NASA API Key?").clicked() {
-                        match open::that("https://api.nasa.gov/") {
-                            Ok(_) => {}
-                            Err(_) => {
-                                ui.label("Failed to open web browser.");
+                            if ui.link("Don't have a NASA API Key?").clicked() {
+                                match open::that("https://api.nasa.gov/") {
+                                    Ok(_) => {}
+                                    Err(_) => {
+                                        ui.label("Failed to open web browser.");
+                                    }
+                                }
                             }
-                        }
-                    }
+                        },
+                    );
                 });
-
                 if ctx.input(|i| i.viewport().close_requested()) {
                     // Tell parent viewport that we should not show next frame:
                     self.api_key_input_visible = false;
@@ -455,6 +460,7 @@ impl eframe::App for SpacePixUi {
                                     Err(e) => { ui.label(&e.to_string()); }
                                 }
                             }
+
                             ui.add(egui::Label::new(format!("Asteroid Id: {}", &object.asteroid_id)));
                             ui.label(format!("Near Miss Date: {}", &object.close_approach_time));
                             ui.label(format!("Distance Min: {} miles from Earth\nDistance Max: {} miles from Earth", &object.estimated_diameter.0, &object.estimated_diameter.1));
