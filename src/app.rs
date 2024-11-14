@@ -1,6 +1,6 @@
 use crate::apis::ApiKey;
-use crate::errors::{FailedToGetDataApod, FailedToGetDataNeows, SetAPIKeyFailed};
-use crate::{json_objects::NearEarthObject, Apod, Urls, NEOWS};
+use crate::errors::ApiKeyError;
+use crate::{Apod, Urls, NearEarthObject};
 use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
@@ -16,13 +16,14 @@ use std::{path::Path, vec};
 #[derive(Clone)]
 pub struct SpacePixUi {
     apod: Apod,
-    neows: NEOWS,
+    neows: NearEarthObject,
     api_key: ApiKey,
     apod_cache: Option<(String, String, String, String, String, String)>,
     neows_cache: Option<String>,
     about_window_visible: bool,
     api_key_input_visible: bool,
     apod_full_window_visible: bool,
+    apod_window_visible: bool,
     neows_invalid_input_window_visible: bool,
 }
 
@@ -30,13 +31,14 @@ impl Default for SpacePixUi {
     fn default() -> Self {
         Self {
             apod: Apod::default(),
-            neows: NEOWS::default(),
+            neows: NearEarthObject::default(),
             api_key: ApiKey::default(),
             apod_cache: None,
             neows_cache: None,
             about_window_visible: false,
             api_key_input_visible: false,
             apod_full_window_visible: false,
+            apod_window_visible: false,
             neows_invalid_input_window_visible: false,
         }
     }
@@ -72,109 +74,52 @@ impl SpacePixUi {
         Ok(image_data)
     }
 
-    pub fn get_apod_data_blocking(
-        &mut self,
-    ) -> Result<(String, String, String, String, String, String), FailedToGetDataApod> {
-        match &self.apod.cache {
-            Some(cache) => Ok(cache.clone()),
-            None => {
-                //let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
-                let sauce = match Urls::get_secret_sauce() {
-                    Ok(sus) => sus,
-                    Err(_) => return Err(FailedToGetDataApod {}),
-                };
-                let url = Urls::make_secret_sauce(&sauce).unwrap().apod;
+    // pub fn get_apod_data_blocking(
+    //     &mut self,
+    // ) -> Result<(String, String, String, String, String, String), FailedToGetDataApod> {
+    //     match &self.apod.cache {
+    //         Some(cache) => Ok(cache.clone()),
+    //         None => {
+    //             //let sauce = Urls::get_secret_sauce().expect("Failed to get secret.");
+    //             let sauce = match Urls::get_secret_sauce() {
+    //                 Ok(sus) => sus,
+    //                 Err(_) => return Err(FailedToGetDataApod {}),
+    //             };
+    //             let url = Urls::make_secret_sauce(&sauce).unwrap().apod;
 
-                let data = match reqwest::blocking::get(&url) {
-                    Ok(r) => r.text().unwrap(),
-                    Err(_) => return Err(FailedToGetDataApod {}),
-                };
+    //             let data = match reqwest::blocking::get(&url) {
+    //                 Ok(r) => r.text().unwrap(),
+    //                 Err(_) => return Err(FailedToGetDataApod {}),
+    //             };
 
-                let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
-                let image_data = (
-                    json_object["copyright"].to_string(),   // Cppyright
-                    json_object["date"].to_string(),        // Date
-                    json_object["explanation"].to_string(), // Explanation
-                    json_object["hdurl"].to_string(),       // hdurl
-                    json_object["title"].to_string(),       // Title
-                    json_object["url"].to_string(),         // url
-                );
+    //             let json_object = json::parse(&data).unwrap(); //.expect("Failed to parse image data...");
+    //             let image_data = (
+    //                 json_object["copyright"].to_string(),   // Cppyright
+    //                 json_object["date"].to_string(),        // Date
+    //                 json_object["explanation"].to_string(), // Explanation
+    //                 json_object["hdurl"].to_string(),       // hdurl
+    //                 json_object["title"].to_string(),       // Title
+    //                 json_object["url"].to_string(),         // url
+    //             );
 
-                self.apod.cache = Some(image_data.clone()); // Cache the image
-                Ok(image_data)
-            }
-        }
-    }
+    //             self.apod.cache = Some(image_data.clone()); // Cache the image
+    //             Ok(image_data)
+    //         }
+    //     }
+    // }
 
-    pub fn get_neows_data_blocking(
-        &mut self,
-        dates: (String, String),
-    ) -> Result<Vec<NearEarthObject>, FailedToGetDataNeows> {
-        // Create NaiveDates from strings
-        let naive_start_date = match NaiveDate::parse_from_str(&dates.0, "%Y-%m-%d") {
-            Ok(date) => date,
-            Err(_) => return Err(FailedToGetDataNeows {}),
-        };
-
-        // Allow user to enter only one date, or a range
-        let naive_end_date = match dates.1.is_empty() {
-            true => naive_start_date,
-            false => match NaiveDate::parse_from_str(&dates.1, "%Y-%m-%d") {
-                Ok(date) => date,
-                Err(_) => return Err(FailedToGetDataNeows {}),
-            },
-        };
-
-        let url =
-            Urls::build_url_neows(naive_start_date, naive_end_date).unwrap_or("fail".to_string());
-
-        let data = match reqwest::blocking::get(url) {
-            Ok(d) => d.text(),
-            Err(_) => return Err(FailedToGetDataNeows {}),
-        };
-
-        let json_data = match json::parse(&data.unwrap()) {
-            Ok(jv) => jv,
-            Err(_) => return Err(FailedToGetDataNeows {}),
-        };
-
-        let objects = json_data["near_earth_objects"][&dates.0].members();
-        let mut objects_vec: Vec<NearEarthObject> = vec![];
-
-        for object in objects {
-            let o = NearEarthObject::new(
-                object["id"].to_string(),
-                object["name"].to_string(),
-                (
-                    object["estimated_diameter"]["feet"]["estimated_diameter_min"].to_string(),
-                    object["estimated_diameter"]["feet"]["estimated_diameter_max"].to_string(),
-                ),
-                object["is_potentially_hazardous_asteroid"]
-                    .as_bool()
-                    .unwrap(),
-                object["close_approach_data"][0]["close_approach_date"].to_string(),
-                object["close_approach_data"][0]["close_approach_date_full"].to_string(),
-                object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string(),
-                object["close_approach_data"][0]["miss_distance"]["miles"].to_string(),
-                object["close_approach_data"][0]["orbiting_body"].to_string(),
-            );
-            objects_vec.push(o);
-        }
-        Ok(objects_vec)
-    }
-
-    fn set_api_key(&mut self, secret_path: &Path, key: String) -> Result<(), SetAPIKeyFailed> {
+    fn set_api_key(&mut self, secret_path: &Path, key: String) -> Result<(), ApiKeyError> {
         match fs::File::create(secret_path) {
             Ok(mut f) => {
                 let json_buff = object! {key: key};
                 let _ = f.write(json_buff.to_string().as_bytes());
                 Ok(())
             }
-            Err(_) => return Err(SetAPIKeyFailed {}),
+            Err(e) => Err(ApiKeyError::KeyStore(e)),
         }
     }
 
-    fn show_about(&mut self, ctx: &egui::Context) {
+    fn about_window(&mut self, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("about_viewport"),
             egui::ViewportBuilder::default()
@@ -198,6 +143,10 @@ impl SpacePixUi {
                 }
             },
         );
+    }
+
+    fn show_about(&mut self, state: bool) {
+        self.about_window_visible = state;
     }
 
     fn show_neows_invlid_input_win(&mut self, ctx: &egui::Context) {
@@ -229,7 +178,7 @@ impl SpacePixUi {
         );
     }
 
-    fn show_apod_full(
+    fn apod_full_window(
         &mut self,
         img: &Image,
         image_name: &String,
@@ -261,6 +210,10 @@ impl SpacePixUi {
                 }
             },
         );
+    }
+
+    fn show_apod_full(&mut self, state: bool) {
+        self.apod_full_window_visible = state;
     }
 
     fn show_api_input(&mut self, ctx: &egui::Context) {
@@ -376,100 +329,102 @@ impl eframe::App for SpacePixUi {
             // APOD //
             egui::Window::new("APOD (Astronomy Pic Of the Day)")
                 .max_height(1000.0)
+                //.open(&mut self.apod_window_visible)
                 .show(ctx, |ui| {
                     // APOD Window //
                     egui::Frame::default().show(ui, |ui| {
                         //let image_data = self.get_apod_data_blocking();
-                        match self.get_apod_data_blocking() {
-                            Ok(data) => {
-                                //ui.heading(data.4);
-                                ui.heading(RichText::new(&data.4).font(FontId::monospace(20.0)));
-                                if ui
-                                    .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
-                                        &data.5,
-                                    )))
-                                    .on_hover_cursor(egui::CursorIcon::PointingHand)
-                                    .clicked()
-                                {
-                                    self.apod_full_window_visible = true;
-                                }
-                                ui.label(format!("Copyright: {}", data.0.replace("\n", "")));
-                                ui.heading(
-                                    RichText::new("Description:").font(FontId::monospace(30.0)),
-                                );
-                                ui.separator();
-                                egui::ScrollArea::vertical().show(ui, |ui| {
-                                    ui.label(RichText::new(&data.2).font(FontId::monospace(17.0)));
-                                });
-                                if self.apod_full_window_visible {
-                                    self.show_apod_full(
-                                        &egui::Image::from_uri(&data.3),
-                                        &data.4,
-                                        &data.0,
-                                        &ctx,
-                                    );
-                                }
-                            }
-                            Err(_) => {
-                                ui.label("Network connection error!");
-                            }
-                        }
+                        // match self.apod.get_apod_data_blocking() {
+                        //     Ok(data) => {
+                        //         //ui.heading(data.4);
+                        //         ui.heading(RichText::new(&data.4).font(FontId::monospace(20.0)));
+                        //         if ui
+                        //             .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
+                        //                 &data.5,
+                        //             )))
+                        //             .on_hover_cursor(egui::CursorIcon::PointingHand)
+                        //             .clicked()
+                        //         {
+                        //             //self.apod_full_window_visible = true;
+                        //             self.show_apod_full(true);
+                        //         }
+                        //         ui.label(format!("Copyright: {}", data.0.replace("\n", "")));
+                        //         ui.heading(
+                        //             RichText::new("Description:").font(FontId::monospace(30.0)),
+                        //         );
+                        //         ui.separator();
+                        //         egui::ScrollArea::vertical().show(ui, |ui| {
+                        //             ui.label(RichText::new(&data.2).font(FontId::monospace(17.0)));
+                        //         });
+                        //         if self.apod_full_window_visible {
+                        //             self.apod_full_window(
+                        //                 &egui::Image::from_uri(&data.3),
+                        //                 &data.4,
+                        //                 &data.0,
+                        //                 &ctx,
+                        //             );
+                        //         }
+                        //     }
+                        //     Err(_) => {
+                        //         ui.label("Network connection error!");
+                        //     }
+                        // }
                     });
                 }); // APOD //
 
             egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| {
                 // NEOWS //
                 egui::Frame::default().show(ui, |ui| {
-                    ui.label("Start and End dates must be within 7 days of eachother.");
-                    ui.label("If you only want to search for one day, only enter a start date, and leave end date empty.");
-                    ui.label("Date format: YYYY-MM-DD");
+                    // ui.label("Start and End dates must be within 7 days of eachother.");
+                    // ui.label("If you only want to search for one day, only enter a start date, and leave end date empty.");
+                    // ui.label("Date format: YYYY-MM-DD");
 
-                    ui.label("Start Date:");
-                    ui.text_edit_singleline(&mut self.neows.start_date);
+                    // ui.label("Start Date:");
+                    // ui.text_edit_singleline(&mut self.neows.start_date);
 
-                    ui.label("End Date:");
-                    ui.text_edit_singleline(&mut self.neows.end_date);
+                    // ui.label("End Date:");
+                    // ui.text_edit_singleline(&mut self.neows.end_date);
 
-                    // let mut neows_ui_data = Vec::default();
-                    if ui.button("Search").clicked() {
-                        match self.get_neows_data_blocking((
-                            self.neows.start_date.clone(),
-                            self.neows.end_date.clone(),
-                        )) {
-                            Ok(data) => {
-                                self.neows.neows.clear(); // Clear old data
-                                for object in data {
-                                    self.neows.neows.push(object);
-                                }
-                                dbg!(&self.neows.neows);
-                            }
-                            Err(_) => {
-                                self.neows_invalid_input_window_visible = true;
-                            }
-                        }
-                    }
+                    // // let mut neows_ui_data = Vec::default();
+                    // if ui.button("Search").clicked() {
+                    //     match self.get_neows_data_blocking((
+                    //         self.neows.start_date.clone(),
+                    //         self.neows.end_date.clone(),
+                    //     )) {
+                    //         Ok(data) => {
+                    //             self.neows.neows.clear(); // Clear old data
+                    //             for object in data {
+                    //                 self.neows.neows.push(object);
+                    //             }
+                    //             dbg!(&self.neows.neows);
+                    //         }
+                    //         Err(_) => {
+                    //             self.neows_invalid_input_window_visible = true;
+                    //         }
+                    //     }
+                    // }
 
-                    ui.separator();
+                    // ui.separator();
 
-                    // Display any NeoWs
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        for object in &self.neows.neows {
-                            if ui.link(&object.name.replace("(", "").replace(")", "")).clicked() {
-                                match open::that(format!("https://eyes.nasa.gov/apps/asteroids/#/{}", &object.name.replace(" ", "_").replace("(", "").replace(")", "").to_lowercase())) {
-                                    Ok(_) => {},
-                                    Err(e) => { ui.label(&e.to_string()); }
-                                }
-                            }
+                    // // Display any NeoWs
+                    // egui::ScrollArea::vertical().show(ui, |ui| {
+                    //     for object in &self.neows.neows {
+                    //         if ui.link(&object.name.replace("(", "").replace(")", "")).clicked() {
+                    //             match open::that(format!("https://eyes.nasa.gov/apps/asteroids/#/{}", &object.name.replace(" ", "_").replace("(", "").replace(")", "").to_lowercase())) {
+                    //                 Ok(_) => {},
+                    //                 Err(e) => { ui.label(&e.to_string()); }
+                    //             }
+                    //         }
 
-                            ui.add(egui::Label::new(format!("Asteroid Id: {}", &object.asteroid_id)));
-                            ui.label(format!("Near Miss Date: {}", &object.close_approach_time));
-                            ui.label(format!("Distance Min: {} miles from Earth\nDistance Max: {} miles from Earth", &object.estimated_diameter.0, &object.estimated_diameter.1));
-                            ui.label(format!("Relative Velocity: {} miles per hour", object.relative_velocity));
-                            ui.label(format!("Estimated Diameter: (min {} feet\nmax {} feet", object.estimated_diameter.0, object.estimated_diameter.1));
-                            ui.label(format!("Deemed hazardous by NASA: {}", object.is_potentially_hazardous_asteroid));
-                            ui.separator();
-                        }
-                    });
+                    //         ui.add(egui::Label::new(format!("Asteroid Id: {}", &object.asteroid_id)));
+                    //         ui.label(format!("Near Miss Date: {}", &object.close_approach_time));
+                    //         ui.label(format!("Distance Min: {} miles from Earth\nDistance Max: {} miles from Earth", &object.estimated_diameter.0, &object.estimated_diameter.1));
+                    //         ui.label(format!("Relative Velocity: {} miles per hour", object.relative_velocity));
+                    //         ui.label(format!("Estimated Diameter: (min {} feet\nmax {} feet", object.estimated_diameter.0, object.estimated_diameter.1));
+                    //         ui.label(format!("Deemed hazardous by NASA: {}", object.is_potentially_hazardous_asteroid));
+                    //         ui.separator();
+                    //     }
+                    // });
                 });
             }); // NEOWS //
         });
@@ -482,7 +437,7 @@ impl eframe::App for SpacePixUi {
         }
 
         if self.about_window_visible {
-            self.show_about(&ctx);
+            self.about_window(&ctx);
         }
     }
 }
