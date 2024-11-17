@@ -4,6 +4,8 @@ use thiserror::Error;
 pub enum NetworkError {
     #[error("Failed to connect to NASA API")]
     ConnectionFailed(#[from] reqwest::Error),
+    #[error("Failed to parse APOD image JSON")]
+    JsonParseFailed(#[from] json::Error)
 }
 
 #[derive(Error, Debug)]
