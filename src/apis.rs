@@ -147,9 +147,11 @@ impl NearEarthObject {
         }
     }
 
-    pub fn get_neows_data_blocking(&self) {
-        todo!()
-    }
+    // Get near earth object feed by date range
+    pub fn get_neows_feed(&self, start_date: &str, end_date: &str) {}
+
+    // Get unique near earth object by it's id
+    pub fn get_neows_by_id(&self, id: &str){}
 }
 
 #[allow(dead_code)]
