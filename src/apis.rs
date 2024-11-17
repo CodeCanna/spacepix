@@ -1,9 +1,6 @@
-use std::default;
-
-use clap::builder::Str;
 use json::object;
 
-use crate::{errors::NetworkError, Parser, Urls};
+use crate::{errors::NetworkError, Parser};
 
 #[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
@@ -16,7 +13,7 @@ impl ApiKey {
         Self { key: k.to_string() }
     }
 }
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(serde::Deserialize, serde::Serialize, Debug)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
 pub struct Apod {
@@ -65,25 +62,33 @@ impl Apod {
         }
     }
 
-    pub fn get_apod_data_blocking(&self) /*-> Result<Self, NetworkError>*/ {
+    pub fn get_apod_data_blocking(&self) -> Result<Self, NetworkError> {
         match reqwest::blocking::get(Parser::default().apod_url()) {
-            Ok(r) => {
-                // let json_obj = object! {
-                //     date: r["date"],
-                //     explanation: r["explanation"],
-                //     hdurl: r["hdurl"],
-                //     media_type: r["media_type"],
-                //     service_version: r["service_version"],
-                //     title: r["title"],
-                //     url: r["url"]
-                // };
+            Ok(r) => match json::parse(r.text().unwrap().as_str()) {
+                Ok(j) => {
+                    let json_obj = object! {
+                        date: j["date"].clone(),
+                        explanation: j["explanation"].clone(),
+                        hdurl: j["hdurl"].clone(),
+                        media_type: j["media_type"].clone(),
+                        service_version: j["service_version"].clone(),
+                        title: j["title"].clone(),
+                        url: j["url"].clone()
+                    };
 
-                // Self {
-                //     date: json_obj["date"],
-                // }
-                dbg!(r.text());
+                    Ok(Self {
+                        date: json_obj["date"].to_string(),
+                        explanation: json_obj["explanation"].to_string(),
+                        hdurl: json_obj["hdurl"].to_string(),
+                        media_type: json_obj["media_type"].to_string(),
+                        service_version: json_obj["service_version"].to_string(),
+                        title: json_obj["title"].to_string(),
+                        url: json_obj["url"].to_string()
+                    })
+                },
+                Err(e) => return Err(NetworkError::JsonParseFailed(e)),
             }
-            Err(_) => (),
+            Err(e) => return Err(NetworkError::ConnectionFailed(e))
         }
     }
 }
@@ -156,8 +161,6 @@ mod tests {
 
     #[test]
     fn test_get_apod_data_blocking() {
-        let test_apod = Apod::default();
-
-        dbg!(test_apod.get_apod_data_blocking());
+        todo!()
     }
 }
