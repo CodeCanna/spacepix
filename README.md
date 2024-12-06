@@ -25,14 +25,8 @@ If you just want to run Spacepix you can use `cargo run` or `cargo run --release
 You can run Spacepix with Make using `make run` or `make rrun` for optimizations using `--release`
 
 # "Activating" Spacepix
-
-### Obtaining an API key
-Spacepix uses NASA's API to get it's data.  NASA requires that you [register here](https://api.nasa.gov/) to get a free API key.  This will allow you to use Spacepix with no limitations.
-
-Once you get your API key, you can enter it in Spacepix by going to Settings->Set API Key.  For now you might have to restart Spacepix if it still doesn't work but it should work after that.  There's an issue already open for this problem.
-
 ### Using NASA's demo API Key
-NASA has a publically available API key for testing out the API.  You can go to Settings->Set API Key and type in `DEMO_KEY` instead of typing in an API key and Spacepix will use this public key, however the public key has limitations.
+By default Spacepix uses the `DEMO_KEY` to retrieve data from the NASA API.  This key should be sufficient if you are the only person on your network using Spacepix.  However Spacepix is supposed to be educational software to be used by many, if your organization wants to use Spacepix on a broader scale it would be a good idea to get an [API key](https://api.nasa.gov/) from the NASA website.
 
 ### DEMO_KEY Rate Limits
 
@@ -40,5 +34,10 @@ In documentation examples, the special DEMO_KEY api key is used. This API key ca
 
 * Hourly Limit: 30 requests per IP address per hour
 * Daily Limit: 50 requests per IP address per day
+
+### Obtaining an API key
+Spacepix uses NASA's API to get it's data.  NASA requires that you [register here](https://api.nasa.gov/) to get a free API key.  This will allow you to use Spacepix with no limitations.
+
+Once you get your API key, you can enter it in Spacepix by going to Settings->Set API Key.  For now you might have to restart Spacepix if it still doesn't work but it should work after that.  There's an issue already open for this problem.
 
 

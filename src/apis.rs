@@ -17,18 +17,20 @@ impl ApiKey {
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
 pub struct Apod {
-    date: String,
-    explanation: String,
-    hdurl: String,
-    media_type: String,
-    service_version: String,
-    title: String,
-    url: String,
+    pub copyright: String,
+    pub date: String,
+    pub explanation: String,
+    pub hdurl: String,
+    pub media_type: String,
+    pub service_version: String,
+    pub title: String,
+    pub url: String,
 }
 
 impl Default for Apod {
     fn default() -> Self {
         Self {
+            copyright: String::default(),
             date: String::default(),
             explanation: String::default(),
             hdurl: String::default(),
@@ -43,6 +45,7 @@ impl Default for Apod {
 impl Apod {
     pub fn new(
         &self,
+        copyright: String,
         date: String,
         explanation: String,
         hdurl: String,
@@ -52,6 +55,7 @@ impl Apod {
         url: String,
     ) -> Self {
         Self {
+            copyright: copyright,
             date: date,
             explanation: explanation,
             hdurl: hdurl,
@@ -65,25 +69,16 @@ impl Apod {
     pub fn get_apod_data_blocking(&self) -> Result<Self, NetworkError> {
         match reqwest::blocking::get(Parser::default().apod_url()) {
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
-                Ok(j) => {
-                    let json_obj = object! {
-                        date: j["date"].clone(),
-                        explanation: j["explanation"].clone(),
-                        hdurl: j["hdurl"].clone(),
-                        media_type: j["media_type"].clone(),
-                        service_version: j["service_version"].clone(),
-                        title: j["title"].clone(),
-                        url: j["url"].clone()
-                    };
-
+                Ok(json_obj) => {
                     Ok(Self {
-                        date: json_obj["date"].to_string(),
-                        explanation: json_obj["explanation"].to_string(),
-                        hdurl: json_obj["hdurl"].to_string(),
-                        media_type: json_obj["media_type"].to_string(),
-                        service_version: json_obj["service_version"].to_string(),
-                        title: json_obj["title"].to_string(),
-                        url: json_obj["url"].to_string()
+                       copyright: json_obj["copyright"].to_string(),
+                       date: json_obj["date"].to_string(),
+                       explanation: json_obj["explanation"].to_string(),
+                       hdurl: json_obj["hdurl"].to_string(),
+                       media_type: json_obj["media_type"].to_string(),
+                       service_version: json_obj["service_version"].to_string(),
+                       title: json_obj["title"].to_string(),
+                       url: json_obj["url"].to_string()
                     })
                 },
                 Err(e) => return Err(NetworkError::JsonParseFailed(e)),
@@ -127,12 +122,12 @@ impl NearEarthObject {
         asteroid_id: String,
         name: String,
         estimated_diameter: (String, String), // (min, max)
-        is_potentially_hazardous_asteroid: bool,
-        close_approach_date: String,
-        close_approach_time: String,
-        relative_velocity: String,
-        miss_distance: String,
-        orbiting_body: String,
+    is_potentially_hazardous_asteroid: bool,
+    close_approach_date: String,
+    close_approach_time: String,
+    relative_velocity: String,
+    miss_distance: String,
+    orbiting_body: String,
     ) -> Self {
         Self {
             asteroid_id,
