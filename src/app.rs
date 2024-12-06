@@ -16,9 +16,9 @@ use std::{path::Path, vec};
 #[derive(Clone)]
 pub struct SpacePixUi {
     apod: Apod,
+    apod_cache: Option<Apod>,
     neows: NearEarthObject,
     api_key: ApiKey,
-    apod_cache: Option<(String, String, String, String, String, String)>,
     neows_cache: Option<String>,
     about_window_visible: bool,
     api_key_input_visible: bool,
@@ -31,9 +31,9 @@ impl Default for SpacePixUi {
     fn default() -> Self {
         Self {
             apod: Apod::default(),
+            apod_cache: None,
             neows: NearEarthObject::default(),
             api_key: ApiKey::default(),
-            apod_cache: None,
             neows_cache: None,
             about_window_visible: false,
             api_key_input_visible: false,
@@ -333,42 +333,38 @@ impl eframe::App for SpacePixUi {
                 .show(ctx, |ui| {
                     // APOD Window //
                     egui::Frame::default().show(ui, |ui| {
-                        //let image_data = self.get_apod_data_blocking();
-                        // match self.apod.get_apod_data_blocking() {
-                        //     Ok(data) => {
-                        //         //ui.heading(data.4);
-                        //         ui.heading(RichText::new(&data.4).font(FontId::monospace(20.0)));
-                        //         if ui
-                        //             .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
-                        //                 &data.5,
-                        //             )))
-                        //             .on_hover_cursor(egui::CursorIcon::PointingHand)
-                        //             .clicked()
-                        //         {
-                        //             //self.apod_full_window_visible = true;
-                        //             self.show_apod_full(true);
-                        //         }
-                        //         ui.label(format!("Copyright: {}", data.0.replace("\n", "")));
-                        //         ui.heading(
-                        //             RichText::new("Description:").font(FontId::monospace(30.0)),
-                        //         );
-                        //         ui.separator();
-                        //         egui::ScrollArea::vertical().show(ui, |ui| {
-                        //             ui.label(RichText::new(&data.2).font(FontId::monospace(17.0)));
-                        //         });
-                        //         if self.apod_full_window_visible {
-                        //             self.apod_full_window(
-                        //                 &egui::Image::from_uri(&data.3),
-                        //                 &data.4,
-                        //                 &data.0,
-                        //                 &ctx,
-                        //             );
-                        //         }
-                        //     }
-                        //     Err(_) => {
-                        //         ui.label("Network connection error!");
-                        //     }
-                        // }
+                        match &self.apod_cache {
+                            Some(data) => {
+                                ui.heading(RichText::new(data.title.clone()).font(FontId::monospace(20.0)));
+                                if ui.add(
+                                    egui::widgets::ImageButton::new(egui::Image::from_uri(
+                                    data.url.clone(),
+                                ))).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
+                                    self.apod_full_window_visible = true;
+                                    //self.show_apod_full(true);
+                                }
+                                ui.label(format!("Copyright: {}", data.copyright.clone().replace("\n", "")));
+                                ui.heading(
+                                    RichText::new("Description:").font(FontId::monospace(30.0)),
+                                );
+                                ui.separator();
+                                egui::ScrollArea::vertical().show(ui, |ui| {
+                                    ui.label(RichText::new(data.explanation.clone()).font(FontId::monospace(17.0)));
+                                });
+
+                                if self.apod_full_window_visible {
+                                    self.apod_full_window(
+                                        &egui::Image::from_uri(data.hdurl.clone()),
+                                        &data.title.clone(),
+                                        &data.copyright.clone(),
+                                        &ctx,
+                                    );
+                                }
+                            },
+                            None => {
+                                self.apod_cache = Some(self.apod.get_apod_data_blocking().unwrap());
+                            }
+                        }
                     });
                 }); // APOD //
 
