@@ -16,9 +16,9 @@ use std::{path::Path, vec};
 #[derive(Clone)]
 pub struct SpacePixUi {
     apod: Apod,
+    apod_cache: Option<Apod>,
     neows: NearEarthObject,
     api_key: ApiKey,
-    apod_cache: Option<(String, String, String, String, String, String)>,
     neows_cache: Option<String>,
     about_window_visible: bool,
     api_key_input_visible: bool,
@@ -31,9 +31,9 @@ impl Default for SpacePixUi {
     fn default() -> Self {
         Self {
             apod: Apod::default(),
+            apod_cache: None,
             neows: NearEarthObject::default(),
             api_key: ApiKey::default(),
-            apod_cache: None,
             neows_cache: None,
             about_window_visible: false,
             api_key_input_visible: false,
@@ -61,14 +61,14 @@ impl SpacePixUi {
     #[allow(dead_code)]
     pub async fn get_pic_data() -> Result<(String, String), reqwest::Error> {
         let data = reqwest::get("https://api.nasa.gov/planetary/apod?api_key=")
-            .await?
-            .text()
-            .await?;
+        .await?
+        .text()
+        .await?;
 
         let json_object = json::parse(&data).expect("Coultn't parse json.");
         let image_data: (String, String) = (
             json_object["hdurl"].to_string(),
-            json_object["explanation"].to_string(),
+                                            json_object["explanation"].to_string(),
         );
 
         Ok(image_data)
@@ -122,26 +122,26 @@ impl SpacePixUi {
     fn about_window(&mut self, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("about_viewport"),
-            egui::ViewportBuilder::default()
-                .with_title("About Spacepix")
-                .with_inner_size([300.0, 200.0]),
-            |ctx, class| {
-                assert!(
-                    class == egui::ViewportClass::Immediate,
-                    "This egui backend doesn't support multiple viewports"
-                );
+                                    egui::ViewportBuilder::default()
+                                    .with_title("About Spacepix")
+                                    .with_inner_size([300.0, 200.0]),
+                                    |ctx, class| {
+                                        assert!(
+                                            class == egui::ViewportClass::Immediate,
+                                            "This egui backend doesn't support multiple viewports"
+                                        );
 
-                egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.heading("Spacepix");
-                    ui.label("Creator & Maintainer: Mark A Waid Jr - mark.waid94@gmail.com");
-                    ui.label("License: GNU");
-                });
+                                        egui::CentralPanel::default().show(ctx, |ui| {
+                                            ui.heading("Spacepix");
+                                            ui.label("Creator & Maintainer: Mark A Waid Jr - mark.waid94@gmail.com");
+                                            ui.label("License: GNU");
+                                        });
 
-                if ctx.input(|i| i.viewport().close_requested()) {
-                    // Tell parent viewport that we should not show next frame:
-                    self.about_window_visible = false;
-                }
-            },
+                                        if ctx.input(|i| i.viewport().close_requested()) {
+                                            // Tell parent viewport that we should not show next frame:
+                                            self.about_window_visible = false;
+                                        }
+                                    },
         );
     }
 
@@ -152,29 +152,29 @@ impl SpacePixUi {
     fn show_neows_invlid_input_win(&mut self, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("invalid_neows_input_viewport"),
-            egui::ViewportBuilder::default()
-                .with_title("Invalid Input")
-                .with_inner_size([300.0, 200.0]),
-            |ctx, class| {
-                assert!(
-                    class == egui::ViewportClass::Immediate,
-                    "This egui backend doesn't support multiple viewports"
-                );
+                                    egui::ViewportBuilder::default()
+                                    .with_title("Invalid Input")
+                                    .with_inner_size([300.0, 200.0]),
+                                    |ctx, class| {
+                                        assert!(
+                                            class == egui::ViewportClass::Immediate,
+                                            "This egui backend doesn't support multiple viewports"
+                                        );
 
-                egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.heading("NeoWs Invalid Input!");
-                    ui.label("Both inputs must be valid dates within 7 days of eachother.  Also both vields must be filled out.");
-                    ui.label("Input Error!");
-                    if ui.button("Ok").clicked() {
-                        self.neows_invalid_input_window_visible = false;
-                    }
-                });
+                                        egui::CentralPanel::default().show(ctx, |ui| {
+                                            ui.heading("NeoWs Invalid Input!");
+                                            ui.label("Both inputs must be valid dates within 7 days of eachother.  Also both vields must be filled out.");
+                                            ui.label("Input Error!");
+                                            if ui.button("Ok").clicked() {
+                                                self.neows_invalid_input_window_visible = false;
+                                            }
+                                        });
 
-                if ctx.input(|i| i.viewport().close_requested()) {
-                    // Tell parent viewport that we should not show next frame:
-                    self.neows_invalid_input_window_visible = false;
-                }
-            },
+                                        if ctx.input(|i| i.viewport().close_requested()) {
+                                            // Tell parent viewport that we should not show next frame:
+                                            self.neows_invalid_input_window_visible = false;
+                                        }
+                                    },
         );
     }
 
@@ -187,28 +187,28 @@ impl SpacePixUi {
     ) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("apod_viewport"),
-            egui::ViewportBuilder::default()
-                .with_title(format!(
-                    "{} (By {})",
-                    &image_name,
-                    &image_credit.replace("\n", "")
-                ))
-                .with_maximized(true),
-            |ctx, class| {
-                assert!(
-                    class == egui::ViewportClass::Immediate,
-                    "This egui backend doesn't support multiple viewports"
-                );
+                                    egui::ViewportBuilder::default()
+                                    .with_title(format!(
+                                        "{} (By {})",
+                                                        &image_name,
+                                                        &image_credit.replace("\n", "")
+                                    ))
+                                    .with_maximized(true),
+                                    |ctx, class| {
+                                        assert!(
+                                            class == egui::ViewportClass::Immediate,
+                                            "This egui backend doesn't support multiple viewports"
+                                        );
 
-                egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.image(img.source(ctx));
-                });
+                                        egui::CentralPanel::default().show(ctx, |ui| {
+                                            ui.image(img.source(ctx));
+                                        });
 
-                if ctx.input(|i| i.viewport().close_requested()) {
-                    // Tell parent viewport that we should not show next frame:
-                    self.apod_full_window_visible = false;
-                }
-            },
+                                        if ctx.input(|i| i.viewport().close_requested()) {
+                                            // Tell parent viewport that we should not show next frame:
+                                            self.apod_full_window_visible = false;
+                                        }
+                                    },
         );
     }
 
@@ -219,52 +219,52 @@ impl SpacePixUi {
     fn show_api_input(&mut self, ctx: &egui::Context) {
         ctx.show_viewport_immediate(
             egui::ViewportId::from_hash_of("show_api_input_viewport"),
-            egui::ViewportBuilder::default()
-                .with_title("API Key")
-                .with_inner_size([300.0, 200.0]),
-            |ctx, class| {
-                assert!(
-                    class == egui::ViewportClass::Immediate,
-                    "This egui backend doesn't support multiple viewports"
-                );
+                                    egui::ViewportBuilder::default()
+                                    .with_title("API Key")
+                                    .with_inner_size([300.0, 200.0]),
+                                    |ctx, class| {
+                                        assert!(
+                                            class == egui::ViewportClass::Immediate,
+                                            "This egui backend doesn't support multiple viewports"
+                                        );
 
-                egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.with_layout(
-                        egui::Layout::top_down_justified(egui::Align::Center),
-                        |ui| {
-                            ui.heading("Enter your NASA API Key below.");
-                            ui.label("NOTE: Type DEMO_KEY to use the demo key, with limitations.");
-                            ui.text_edit_singleline(&mut self.api_key.key);
-                            if ui.button("Submit").clicked() {
-                                match self.set_api_key(
-                                    &path::Path::new("secret.json"),
-                                    self.api_key.key.clone(),
-                                ) {
-                                    Ok(_) => {
-                                        ui.label("Api key Set!");
-                                    }
-                                    Err(e) => {
-                                        ui.label(&e.to_string());
-                                    }
-                                }
-                            }
+                                        egui::CentralPanel::default().show(ctx, |ui| {
+                                            ui.with_layout(
+                                                egui::Layout::top_down_justified(egui::Align::Center),
+                                                           |ui| {
+                                                               ui.heading("Enter your NASA API Key below.");
+                                                               ui.label("NOTE: Type DEMO_KEY to use the demo key, with limitations.");
+                                                               ui.text_edit_singleline(&mut self.api_key.key);
+                                                               if ui.button("Submit").clicked() {
+                                                                   match self.set_api_key(
+                                                                       &path::Path::new("secret.json"),
+                                                                                          self.api_key.key.clone(),
+                                                                   ) {
+                                                                       Ok(_) => {
+                                                                           ui.label("Api key Set!");
+                                                                       }
+                                                                       Err(e) => {
+                                                                           ui.label(&e.to_string());
+                                                                       }
+                                                                   }
+                                                               }
 
-                            if ui.link("Don't have a NASA API Key?").clicked() {
-                                match open::that("https://api.nasa.gov/") {
-                                    Ok(_) => {}
-                                    Err(_) => {
-                                        ui.label("Failed to open web browser.");
-                                    }
-                                }
-                            }
-                        },
-                    );
-                });
-                if ctx.input(|i| i.viewport().close_requested()) {
-                    // Tell parent viewport that we should not show next frame:
-                    self.api_key_input_visible = false;
-                }
-            },
+                                                               if ui.link("Don't have a NASA API Key?").clicked() {
+                                                                   match open::that("https://api.nasa.gov/") {
+                                                                       Ok(_) => {}
+                                                                       Err(_) => {
+                                                                           ui.label("Failed to open web browser.");
+                                                                       }
+                                                                   }
+                                                               }
+                                                           },
+                                            );
+                                        });
+                                        if ctx.input(|i| i.viewport().close_requested()) {
+                                            // Tell parent viewport that we should not show next frame:
+                                            self.api_key_input_visible = false;
+                                        }
+                                    },
         );
     }
 }
@@ -328,49 +328,45 @@ impl eframe::App for SpacePixUi {
         egui::CentralPanel::default().show(ctx, |ui| {
             // APOD //
             egui::Window::new("APOD (Astronomy Pic Of the Day)")
-                .max_height(1000.0)
-                //.open(&mut self.apod_window_visible)
-                .show(ctx, |ui| {
-                    // APOD Window //
-                    egui::Frame::default().show(ui, |ui| {
-                        //let image_data = self.get_apod_data_blocking();
-                        // match self.apod.get_apod_data_blocking() {
-                        //     Ok(data) => {
-                        //         //ui.heading(data.4);
-                        //         ui.heading(RichText::new(&data.4).font(FontId::monospace(20.0)));
-                        //         if ui
-                        //             .add(egui::widgets::ImageButton::new(egui::Image::from_uri(
-                        //                 &data.5,
-                        //             )))
-                        //             .on_hover_cursor(egui::CursorIcon::PointingHand)
-                        //             .clicked()
-                        //         {
-                        //             //self.apod_full_window_visible = true;
-                        //             self.show_apod_full(true);
-                        //         }
-                        //         ui.label(format!("Copyright: {}", data.0.replace("\n", "")));
-                        //         ui.heading(
-                        //             RichText::new("Description:").font(FontId::monospace(30.0)),
-                        //         );
-                        //         ui.separator();
-                        //         egui::ScrollArea::vertical().show(ui, |ui| {
-                        //             ui.label(RichText::new(&data.2).font(FontId::monospace(17.0)));
-                        //         });
-                        //         if self.apod_full_window_visible {
-                        //             self.apod_full_window(
-                        //                 &egui::Image::from_uri(&data.3),
-                        //                 &data.4,
-                        //                 &data.0,
-                        //                 &ctx,
-                        //             );
-                        //         }
-                        //     }
-                        //     Err(_) => {
-                        //         ui.label("Network connection error!");
-                        //     }
-                        // }
-                    });
-                }); // APOD //
+            .max_height(1000.0)
+            //.open(&mut self.apod_window_visible)
+            .show(ctx, |ui| {
+                // APOD Window //
+                egui::Frame::default().show(ui, |ui| {
+                    match &self.apod_cache {
+                        Some(data) => {
+                            ui.heading(RichText::new(data.title.clone()).font(FontId::monospace(20.0)));
+                            if ui.add(
+                                egui::widgets::ImageButton::new(egui::Image::from_uri(
+                                    data.url.clone(),
+                                ))).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
+                                    self.apod_full_window_visible = true;
+                                    //self.show_apod_full(true);
+                                }
+                                ui.label(format!("Copyright: {}", data.copyright.clone().replace("\n", "")));
+                            ui.heading(
+                                RichText::new("Description:").font(FontId::monospace(30.0)),
+                            );
+                            ui.separator();
+                            egui::ScrollArea::vertical().show(ui, |ui| {
+                                ui.label(RichText::new(data.explanation.clone()).font(FontId::monospace(17.0)));
+                            });
+
+                            if self.apod_full_window_visible {
+                                self.apod_full_window(
+                                    &egui::Image::from_uri(data.hdurl.clone()),
+                                                      &data.title.clone(),
+                                                      &data.copyright.clone(),
+                                                      &ctx,
+                                );
+                            }
+                        },
+                        None => {
+                            self.apod_cache = Some(self.apod.get_apod_data_blocking().unwrap());
+                        }
+                    }
+                });
+            }); // APOD //
 
             egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| {
                 // NEOWS //
