@@ -7,7 +7,7 @@ use crate::{errors::NetworkError, Parser};
 pub struct ApiKey {
     pub key: String,
 }
-
+// beans
 impl ApiKey {
     pub fn new(&self, k: &str) -> Self {
         Self { key: k.to_string() }
@@ -93,6 +93,22 @@ impl Apod {
     }
 }
 
+pub struct Links {
+    next: String,
+    previous: String,
+    current: String
+}
+
+impl Links {
+    pub fn new(next: String, previous: String, current: String) -> Links {
+        Self {
+            next,
+            previous,
+            current
+        }
+    }
+}
+
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct NearEarthObject {
     pub asteroid_id: String,
@@ -153,6 +169,22 @@ impl NearEarthObject {
     // Get unique near earth object by it's id
     pub fn get_neows_by_id(&self, id: &str){}
 }
+
+// pub struct NearEarthObjectFeed {
+//     links: Links,
+//     element_count: u8,
+//     near_earth_objects: Vec<NearEarthObject>
+// }
+//
+// impl NearEarthObjectFeed {
+//     pub fn new(links: Links, element_count: u8, near_earth_objects: Vec<NearEarthObject>) -> Links{
+//         Self {
+//             links,
+//             element_count,
+//             near_earth_objects
+//         }
+//     }
+// }
 
 #[allow(dead_code)]
 struct DONKI {}
