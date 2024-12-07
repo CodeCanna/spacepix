@@ -88,6 +88,22 @@ impl Apod {
     }
 }
 
+pub struct Links {
+    next: String,
+    previous: String,
+    current: String
+}
+
+impl Links {
+    pub fn new(next: String, previous: String, current: String) -> Links {
+        Self {
+            next,
+            previous,
+            current
+        }
+    }
+}
+
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct NearEarthObject {
     pub asteroid_id: String,
@@ -122,12 +138,12 @@ impl NearEarthObject {
         asteroid_id: String,
         name: String,
         estimated_diameter: (String, String), // (min, max)
-    is_potentially_hazardous_asteroid: bool,
-    close_approach_date: String,
-    close_approach_time: String,
-    relative_velocity: String,
-    miss_distance: String,
-    orbiting_body: String,
+        is_potentially_hazardous_asteroid: bool,
+        close_approach_date: String,
+        close_approach_time: String,
+        relative_velocity: String,
+        miss_distance: String,
+        orbiting_body: String,
     ) -> Self {
         Self {
             asteroid_id,
@@ -147,6 +163,22 @@ impl NearEarthObject {
 
     // Get unique near earth object by it's id
     pub fn get_neows_by_id(&self, id: &str){}
+}
+
+pub struct NearEarthObjectFeed {
+    links: Links,
+    element_count: u8,
+    near_earth_objects: Vec<NearEarthObject>
+}
+
+impl NearEarthObjectFeed {
+    pub fn new(links: Links, element_count: u8, near_earth_objects: Vec<NearEarthObject>) -> Links{
+        Self {
+            links,
+            element_count,
+            near_earth_objects
+        }
+    }
 }
 
 #[allow(dead_code)]
