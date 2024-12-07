@@ -7,7 +7,7 @@ use crate::{errors::NetworkError, Parser};
 pub struct ApiKey {
     pub key: String,
 }
-
+// beans
 impl ApiKey {
     pub fn new(&self, k: &str) -> Self {
         Self { key: k.to_string() }
@@ -165,21 +165,21 @@ impl NearEarthObject {
     pub fn get_neows_by_id(&self, id: &str){}
 }
 
-pub struct NearEarthObjectFeed {
-    links: Links,
-    element_count: u8,
-    near_earth_objects: Vec<NearEarthObject>
-}
-
-impl NearEarthObjectFeed {
-    pub fn new(links: Links, element_count: u8, near_earth_objects: Vec<NearEarthObject>) -> Links{
-        Self {
-            links,
-            element_count,
-            near_earth_objects
-        }
-    }
-}
+// pub struct NearEarthObjectFeed {
+//     links: Links,
+//     element_count: u8,
+//     near_earth_objects: Vec<NearEarthObject>
+// }
+//
+// impl NearEarthObjectFeed {
+//     pub fn new(links: Links, element_count: u8, near_earth_objects: Vec<NearEarthObject>) -> Links{
+//         Self {
+//             links,
+//             element_count,
+//             near_earth_objects
+//         }
+//     }
+// }
 
 #[allow(dead_code)]
 struct DONKI {}

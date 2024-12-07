@@ -437,7 +437,7 @@ impl eframe::App for SpacePixUi {
         }
     }
 }
-
+// beans
 #[cfg(test)]
 mod tests {
     #[test]
