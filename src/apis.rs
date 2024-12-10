@@ -66,7 +66,7 @@ impl Apod {
         }
     }
 
-    pub fn get_apod_data_blocking(&self) -> Result<Self, NetworkError> {
+    pub fn get_apod_data_blocking() -> Result<Self, NetworkError> {
         match reqwest::blocking::get(Parser::default().apod_url()) {
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
                 Ok(json_obj) => {
@@ -87,7 +87,7 @@ impl Apod {
         }
     }
 }
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct Links {
     next: String,
     previous: String,
@@ -176,6 +176,7 @@ impl Links {
 //     }
 // }
 
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 /**
  * Representative of a NearEarthObject from the NASA API
  * estimated_diameter tuple key ((feet_min, feet_max), (meters_min, meters_max))
@@ -183,24 +184,57 @@ impl Links {
  * miss_distance tuple key (astronomical, lunar, kilometers, miles)
  */
 pub struct NearEarthObject {
-    id: String,
-    neo_reference_id: String,
-    name: String,
-    estimated_diameter: ((u8, u8), (u8, u8)), // ((feet_min, feet_max), (meters_min, meters_max))
-    close_approach_date: String,
-    close_approach_date_full: String,
-    epoch_date_close_approach: u64,
-    relative_velocity: (String, String, String), // (kilometers_per_second, kilometers_per_hour, miles_per_hour)
-    miss_distance: (String, String, String, String), // (astronomical, lunar, kilometers, miles)
-    orbiting_body: String,
-    is_sentry_object: bool
+    pub id: String,
+    pub neo_reference_id: String,
+    pub name: String,
+    pub estimated_diameter: ((u8, u8), (u8, u8)), // ((feet_min, feet_max), (meters_min, meters_max))
+    pub is_potentially_hazardous_asteroid: bool,
+    pub close_approach_date: String,
+    pub close_approach_date_full: String,
+    pub epoch_date_close_approach: u64,
+    pub relative_velocity: (String, String, String), // (kilometers_per_second, kilometers_per_hour, miles_per_hour)
+    pub miss_distance: (String, String, String, String), // (astronomical, lunar, kilometers, miles)
+    pub orbiting_body: String,
+    pub is_sentry_object: bool
+}
+
+impl NearEarthObject {
+    pub fn new(
+        id: String,
+        neo_reference_id: String,
+        name: String,
+        estimated_diameter: ((u8, u8), (u8, u8)),
+        is_potentially_hazardous_asteroid: bool,
+        close_approach_date: String,
+        close_approach_date_full: String,
+        epoch_date_close_approach: u64,
+        relative_velocity: (String, String, String),
+        miss_distance: (String, String, String, String),
+        orbiting_body: String,
+        is_sentry_object: bool
+    ) -> Self {
+        Self {
+            id,
+            neo_reference_id,
+            name,
+            estimated_diameter,
+            is_potentially_hazardous_asteroid,
+            close_approach_date,
+            close_approach_date_full,
+            epoch_date_close_approach,
+            relative_velocity,
+            miss_distance,
+            orbiting_body,
+            is_sentry_object
+        }
+    }
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct NEOFeed {
     links: Links,
     element_count: u8,
-    near_earth_objects: Vec<near_earth_object>
+    near_earth_objects: Vec<NearEarthObject>
 }
 
 #[allow(dead_code)]
