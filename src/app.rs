@@ -15,30 +15,24 @@ use std::{path::Path, vec};
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 #[derive(Clone)]
 pub struct SpacePixUi {
-apod: Apod,
-apod_cache: Option<Apod>,
-neows: NearEarthObject,
+apod: Option<Apod>,
+neows: Option<NearEarthObject>,
 api_key: ApiKey,
-neows_cache: Option<String>,
 about_window_visible: bool,
 api_key_input_visible: bool,
 apod_full_window_visible: bool,
-apod_window_visible: bool,
 neows_invalid_input_window_visible: bool,
 }
 
 impl Default for SpacePixUi {
 fn default() -> Self {
     Self {
-        apod: Apod::default(),
-        apod_cache: None,
-        neows: NearEarthObject::default(),
+        apod: None,
+        neows: None,
         api_key: ApiKey::default(),
-        neows_cache: None,
         about_window_visible: false,
         api_key_input_visible: false,
         apod_full_window_visible: false,
-        apod_window_visible: false,
         neows_invalid_input_window_visible: false,
     }
 }
@@ -299,7 +293,7 @@ fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         .show(ctx, |ui| {
             // APOD Window //
             egui::Frame::default().show(ui, |ui| {
-                match &self.apod_cache {
+                match &self.apod {
                     Some(data) => {
                         ui.heading(RichText::new(data.title.clone()).font(FontId::monospace(20.0)));
                         if ui.add(
@@ -328,7 +322,7 @@ fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
                         }
                     },
                     None => {
-                        self.apod_cache = Some(self.apod.get_apod_data_blocking().unwrap());
+                        self.apod = Some(Apod::get_apod_data_blocking().unwrap())
                     }
                 }
             });
