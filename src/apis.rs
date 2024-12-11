@@ -69,21 +69,19 @@ impl Apod {
     pub fn get_apod_data_blocking() -> Result<Self, NetworkError> {
         match reqwest::blocking::get(Parser::default().apod_url()) {
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
-                Ok(json_obj) => {
-                    Ok(Self {
-                       copyright: json_obj["copyright"].to_string(),
-                       date: json_obj["date"].to_string(),
-                       explanation: json_obj["explanation"].to_string(),
-                       hdurl: json_obj["hdurl"].to_string(),
-                       media_type: json_obj["media_type"].to_string(),
-                       service_version: json_obj["service_version"].to_string(),
-                       title: json_obj["title"].to_string(),
-                       url: json_obj["url"].to_string()
-                    })
-                },
+                Ok(json_obj) => Ok(Self {
+                    copyright: json_obj["copyright"].to_string(),
+                    date: json_obj["date"].to_string(),
+                    explanation: json_obj["explanation"].to_string(),
+                    hdurl: json_obj["hdurl"].to_string(),
+                    media_type: json_obj["media_type"].to_string(),
+                    service_version: json_obj["service_version"].to_string(),
+                    title: json_obj["title"].to_string(),
+                    url: json_obj["url"].to_string(),
+                }),
                 Err(e) => return Err(NetworkError::JsonParseFailed(e)),
-            }
-            Err(e) => return Err(NetworkError::ConnectionFailed(e))
+            },
+            Err(e) => return Err(NetworkError::ConnectionFailed(e)),
         }
     }
 }
@@ -91,7 +89,7 @@ impl Apod {
 pub struct Links {
     next: String,
     previous: String,
-    current: String
+    current: String,
 }
 
 impl Links {
@@ -99,82 +97,10 @@ impl Links {
         Self {
             next,
             previous,
-            current
+            current,
         }
     }
 }
-
-// impl Default for NearEarthObject {
-//     fn default() -> Self {
-//         Self {
-//             asteroid_id: String::default(),
-//             name: String::default(),
-//             estimated_diameter: (String::default(), String::default()),
-//             is_potentially_hazardous_asteroid: bool::default(),
-//             close_approach_date: String::default(),
-//             close_approach_time: String::default(),
-//             relative_velocity: String::default(),
-//             miss_distance: String::default(),
-//             orbiting_body: String::default()
-//         }
-//     }
-// }
-//
-// impl NearEarthObject {
-//     pub fn new(
-//         asteroid_id: String,
-//         name: String,
-//         estimated_diameter: (String, String), // (min, max)
-//         is_potentially_hazardous_asteroid: bool,
-//         close_approach_date: String,
-//         close_approach_time: String,
-//         relative_velocity: String,
-//         miss_distance: String,
-//         orbiting_body: String,
-//     ) -> Self {
-//         Self {
-//             asteroid_id,
-//             name,
-//             estimated_diameter,
-//             is_potentially_hazardous_asteroid,
-//             close_approach_date,
-//             close_approach_time,
-//             relative_velocity,
-//             miss_distance,
-//             orbiting_body,
-//         }
-//     }
-//
-//     // Get near earth object feed by date range
-//     pub fn get_neows_feed(&self, date: str) Self {
-//         match reqwest::blocking::get(Parser::default()::neows_url()) {
-//             Ok(d) => {
-//                 Self {
-//
-//                 }
-//             }
-//         }
-//     }
-//
-//     // Get unique near earth object by it's id
-//     pub fn get_neows_by_id(&self, id: &str) {}
-// }
-
-// pub struct NearEarthObjectFeed {
-//     links: Links,
-//     element_count: u8,
-//     near_earth_objects: Vec<NearEarthObject>
-// }
-//
-// impl NearEarthObjectFeed {
-//     pub fn new(links: Links, element_count: u8, near_earth_objects: Vec<NearEarthObject>) -> Links{
-//         Self {
-//             links,
-//             element_count,
-//             near_earth_objects
-//         }
-//     }
-// }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 /**
@@ -187,7 +113,7 @@ pub struct NearEarthObject {
     pub id: String,
     pub neo_reference_id: String,
     pub name: String,
-    pub estimated_diameter: ((u8, u8), (u8, u8)), // ((feet_min, feet_max), (meters_min, meters_max))
+    pub estimated_diameter: ((f32, f32), (f32, f32)), // ((feet_min, feet_max), (meters_min, meters_max))
     pub is_potentially_hazardous_asteroid: bool,
     pub close_approach_date: String,
     pub close_approach_date_full: String,
@@ -195,7 +121,7 @@ pub struct NearEarthObject {
     pub relative_velocity: (String, String, String), // (kilometers_per_second, kilometers_per_hour, miles_per_hour)
     pub miss_distance: (String, String, String, String), // (astronomical, lunar, kilometers, miles)
     pub orbiting_body: String,
-    pub is_sentry_object: bool
+    pub is_sentry_object: bool,
 }
 
 impl NearEarthObject {
@@ -203,7 +129,7 @@ impl NearEarthObject {
         id: String,
         neo_reference_id: String,
         name: String,
-        estimated_diameter: ((u8, u8), (u8, u8)),
+        estimated_diameter: ((f32, f32), (f32, f32)),
         is_potentially_hazardous_asteroid: bool,
         close_approach_date: String,
         close_approach_date_full: String,
@@ -211,7 +137,7 @@ impl NearEarthObject {
         relative_velocity: (String, String, String),
         miss_distance: (String, String, String, String),
         orbiting_body: String,
-        is_sentry_object: bool
+        is_sentry_object: bool,
     ) -> Self {
         Self {
             id,
@@ -225,7 +151,7 @@ impl NearEarthObject {
             relative_velocity,
             miss_distance,
             orbiting_body,
-            is_sentry_object
+            is_sentry_object,
         }
     }
 }
@@ -234,7 +160,55 @@ impl NearEarthObject {
 pub struct NEOFeed {
     links: Links,
     element_count: u8,
-    near_earth_objects: Vec<NearEarthObject>
+    near_earth_objects: Vec<NearEarthObject>,
+}
+
+impl NEOFeed {
+    pub fn get_neows_feed_blocking(date: &str) /*-> Result<_, NetworkError>*/
+    {
+        match reqwest::blocking::get(Parser::default().neows_url(date)) {
+            Ok(r) => match json::parse(r.text().unwrap().as_str()) {
+                Ok(json_obj) => {
+                    let neo_objects_json = json_obj["near_earth_objects"][date].members();
+                    let mut neo_vec: Vec<NearEarthObject> = Vec::default();
+                    for object in neo_objects_json {
+                        println!("{}", object["name"].to_string());
+                        let neo = NearEarthObject::new(
+                            object["id"].to_string(),
+                            object["neo_reference_id"].to_string(),
+                            object["name"].to_string(),
+                            ((object["estimated_diameter"]["feet"]["estimated_diameter_min"].as_f32().unwrap(), object["estimated_diameter"]["feet"]["estimated_diameter_max"].as_f32().unwrap()), (object["estimated_diameter"]["meters"]["estimated_diameter_min"].as_f32().unwrap(), object["estimated_diameter"]["meters"]["estimated_diameter_max"].as_f32().unwrap())), // ((feet_min, feet_max), (meters_min, meters_max))
+                            object["is_potentially_hazardous_asteroid"].as_bool().unwrap(),
+                            object["close_approach_data"][0]["close_approach_date"].to_string(),
+                            object["close_approach_data"][0]["close_approach_date_full"].to_string(),
+                            object["close_approach_data"][0]["epoch_date_close_approach"].as_u64().unwrap(),
+                            (object["close_approach_data"][0]["kilometers_per_second"].to_string(), object["close_approach_data"][0]["kilometers_per_hour"].to_string(), object["close_approach_data"][0]["miles_per_hour"].to_string()), // (kilometers_per_second, kilometers_per_hour, miles_per_hour)
+                            (object["close_approach_data"][0]["astronomical"].to_string(), object["close_approach_data"][0]["lunar"].to_string(), object["close_approach_data"][0]["kilometers"].to_string(), object["close_approach_data"][0]["miles"].to_string()), // (astronomical, lunar, kilometers, miles)
+                            object["close_approach_data"][0]["orbiting_body"].to_string(),
+                            object["is_sentry_object"].as_bool().unwrap()
+                        );
+
+                        neo_vec.push(neo);
+                    }
+                    dbg!(neo_vec);
+                    // Ok(Self
+                    //    links: Links::new(
+                    //     json_obj["links"]["next"].to_string(),
+                    //     json_obj["links"]["previous"].to_string(),
+                    //     json_obj["links"]["self"].to_string()
+                    //    ),
+                    //    element_count: json_obj["element_count"].as_u8().unwrap(),
+                    //    near_earth_objects: NearEarthObject::new(
+                    //     json_obj["near_earth_objects"][date][0]["id"].to_string(),
+                    //     json_obj["near_earth_objects"][date][0]
+                    //    )
+                    // })
+                }
+                Err(_) => (), /*Err(e) => return Err(NetworkError::JsonParseFailed(e)),*/
+            },
+            Err(_) => (), /*Err(e) => return Err(NetworkError::ConnectionFailed(e))*/
+        }
+    }
 }
 
 #[allow(dead_code)]
