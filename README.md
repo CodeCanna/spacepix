@@ -29,7 +29,7 @@ You can run Spacepix with Make using `make run` or `make rrun` for optimizations
 ### Obtaining an API key
 Spacepix uses NASA's API to get it's data.  NASA requires that you [register here](https://api.nasa.gov/) to get a free API key.  This will allow you to use Spacepix with no limitations.
 
-Once you get your API key, you can enter it in Spacepix by going to Settings->Set API Key.  For now you might have to restart Spacepix if it still doesn't work but it should work after that.  There's an issue already open for this problem.
+Once you get your API key, you can enter it in Spacepix by going to Settings->Set API Key.  The next time you start Spacepix your key should be used instead of `DEMO_KEY`.
 
 ### Using NASA's demo API Key
 Spacepix uses `DEMO_KEY` by default.  This can be changed by going to Settings->Set API Key and entering in you API key.
