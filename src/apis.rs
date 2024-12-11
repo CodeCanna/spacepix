@@ -182,8 +182,8 @@ impl NEOFeed {
                             object["close_approach_data"][0]["close_approach_date"].to_string(),
                             object["close_approach_data"][0]["close_approach_date_full"].to_string(),
                             object["close_approach_data"][0]["epoch_date_close_approach"].as_u64().unwrap(),
-                            (object["close_approach_data"][0]["kilometers_per_second"].to_string(), object["close_approach_data"][0]["kilometers_per_hour"].to_string(), object["close_approach_data"][0]["miles_per_hour"].to_string()), // (kilometers_per_second, kilometers_per_hour, miles_per_hour)
-                            (object["close_approach_data"][0]["astronomical"].to_string(), object["close_approach_data"][0]["lunar"].to_string(), object["close_approach_data"][0]["kilometers"].to_string(), object["close_approach_data"][0]["miles"].to_string()), // (astronomical, lunar, kilometers, miles)
+                            (object["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"].to_string(), object["close_approach_data"][0]["relative_velocity"]["kilometers_per_hour"].to_string(), object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string()), // (kilometers_per_second, kilometers_per_hour, miles_per_hour)
+                            (object["close_approach_data"][0]["miss_distance"]["astronomical"].to_string(), object["close_approach_data"][0]["miss_distance"]["lunar"].to_string(), object["close_approach_data"][0]["miss_distance"]["kilometers"].to_string(), object["close_approach_data"][0]["miss_distance"]["miles"].to_string()), // (astronomical, lunar, kilometers, miles)
                             object["close_approach_data"][0]["orbiting_body"].to_string(),
                             object["is_sentry_object"].as_bool().unwrap()
                         );
