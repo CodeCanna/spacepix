@@ -32,7 +32,7 @@ Spacepix uses NASA's API to get it's data.  NASA requires that you [register her
 Once you get your API key, you can enter it in Spacepix by going to Settings->Set API Key.  For now you might have to restart Spacepix if it still doesn't work but it should work after that.  There's an issue already open for this problem.
 
 ### Using NASA's demo API Key
-NASA has a publically available API key for testing out the API.  You can go to Settings->Set API Key and type in `DEMO_KEY` instead of typing in an API key and Spacepix will use this public key, however the public key has limitations.
+Spacepix uses `DEMO_KEY` by default.  This can be changed by going to Settings->Set API Key and entering in you API key.
 
 ### DEMO_KEY Rate Limits
 
