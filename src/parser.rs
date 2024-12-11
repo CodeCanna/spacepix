@@ -9,7 +9,7 @@ impl Default for Parser {
     fn default() -> Self {
         Self {
             urls: Urls::default(),
-            key: String::from("DEMO_KEY")
+            key: String::from("DEMO_KEY"),
         }
     }
 }
@@ -26,11 +26,15 @@ impl Parser {
         format!("{}{}", self.urls.apod, self.key)
     }
 
-    fn neows_url(&self, start_date: String, end_date: String) -> String {
-        self.urls
-            .neows
-            .replace("START_DATE", &start_date.to_string().as_str())
-            .replace("END_DATE", &end_date.to_string().as_str())
+    pub fn neows_url(&self, date: &str) -> String {
+        format!(
+            "{}{}",
+            self.urls
+                .neows
+                .replace("START_DATE", date)
+                .replace("END_DATE", date),
+            self.key
+        )
     }
 }
 
