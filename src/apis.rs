@@ -1,5 +1,3 @@
-use json::object;
-
 use crate::{errors::NetworkError, Parser};
 
 #[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
@@ -7,7 +5,7 @@ use crate::{errors::NetworkError, Parser};
 pub struct ApiKey {
     pub key: String,
 }
-// beans
+
 impl ApiKey {
     pub fn new(&self, k: &str) -> Self {
         Self { key: k.to_string() }
@@ -102,13 +100,13 @@ impl Links {
     }
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 /**
  * Representative of a NearEarthObject from the NASA API
  * estimated_diameter tuple key ((feet_min, feet_max), (meters_min, meters_max))
  * relative_velocity tuple key (kilometers_per_second, kilometers_per_hour, miles_per_hour)
  * miss_distance tuple key (astronomical, lunar, kilometers, miles)
  */
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct NearEarthObject {
     pub id: String,
     pub neo_reference_id: String,
@@ -164,7 +162,7 @@ pub struct NEOFeed {
 }
 
 impl NEOFeed {
-    pub fn get_neows_feed_blocking(date: &str) /*-> Result<_, NetworkError>*/
+    pub fn get_neows_feed_blocking(date: &str) -> Result<Vec<NearEarthObject>, NetworkError>
     {
         match reqwest::blocking::get(Parser::default().neows_url(date)) {
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
@@ -172,7 +170,6 @@ impl NEOFeed {
                     let neo_objects_json = json_obj["near_earth_objects"][date].members();
                     let mut neo_vec: Vec<NearEarthObject> = Vec::default();
                     for object in neo_objects_json {
-                        println!("{}", object["name"].to_string());
                         let neo = NearEarthObject::new(
                             object["id"].to_string(),
                             object["neo_reference_id"].to_string(),
@@ -190,23 +187,12 @@ impl NEOFeed {
 
                         neo_vec.push(neo);
                     }
-                    dbg!(neo_vec);
-                    // Ok(Self
-                    //    links: Links::new(
-                    //     json_obj["links"]["next"].to_string(),
-                    //     json_obj["links"]["previous"].to_string(),
-                    //     json_obj["links"]["self"].to_string()
-                    //    ),
-                    //    element_count: json_obj["element_count"].as_u8().unwrap(),
-                    //    near_earth_objects: NearEarthObject::new(
-                    //     json_obj["near_earth_objects"][date][0]["id"].to_string(),
-                    //     json_obj["near_earth_objects"][date][0]
-                    //    )
-                    // })
+                    //dbg!(neo_vec);
+                    Ok(neo_vec)
                 }
-                Err(_) => (), /*Err(e) => return Err(NetworkError::JsonParseFailed(e)),*/
+                Err(e) => return Err(NetworkError::JsonParseFailed(e)),
             },
-            Err(_) => (), /*Err(e) => return Err(NetworkError::ConnectionFailed(e))*/
+            Err(e) => return Err(NetworkError::ConnectionFailed(e))
         }
     }
 }
@@ -216,6 +202,7 @@ struct DONKI {}
 
 #[cfg(test)]
 mod tests {
+    #[allow(unused_imports)]
     use super::Apod;
 
     #[test]

@@ -1,6 +1,7 @@
 use crate::apis::ApiKey;
-use crate::errors::ApiKeyError;
-use crate::{Apod, NEOFeed, NearEarthObject, Urls};
+use crate::errors::{ApiKeyError, NetworkError};
+use crate::ui::{AboutWindow, ApiKeyWindow};
+use crate::{Apod, ApodWindow, NEOFeed, NearEarthObject, NeowsWindow};
 use chrono::NaiveDate;
 use eframe::egui::{FontId, RichText};
 use egui::Image;
@@ -16,12 +17,11 @@ use std::{path::Path, vec};
 #[derive(Clone)]
 pub struct SpacePixUi {
     apod: Option<Apod>,
-    neows: Option<NearEarthObject>,
-    api_key: ApiKey,
-    about_window_visible: bool,
-    api_key_input_visible: bool,
-    apod_full_window_visible: bool,
-    neows_invalid_input_window_visible: bool,
+    neows: Option<Vec<NearEarthObject>>,
+    apod_ui: ApodWindow,
+    neows_ui: NeowsWindow,
+    about: AboutWindow,
+    api_key: ApiKeyWindow,
 }
 
 impl Default for SpacePixUi {
@@ -29,11 +29,10 @@ impl Default for SpacePixUi {
         Self {
             apod: None,
             neows: None,
-            api_key: ApiKey::default(),
-            about_window_visible: false,
-            api_key_input_visible: false,
-            apod_full_window_visible: false,
-            neows_invalid_input_window_visible: false,
+            apod_ui: ApodWindow::default(),
+            neows_ui: NeowsWindow::default(),
+            about: AboutWindow::default(),
+            api_key: ApiKeyWindow::default(),
         }
     }
 }
@@ -99,14 +98,14 @@ impl SpacePixUi {
 
                 if ctx.input(|i| i.viewport().close_requested()) {
                     // Tell parent viewport that we should not show next frame:
-                    self.about_window_visible = false;
+                    self.about.about_window_visible = false;
                 }
             },
         );
     }
 
     fn show_about(&mut self, state: bool) {
-        self.about_window_visible = state;
+        self.about.about_window_visible = state;
     }
 
     fn show_neows_invlid_input_win(&mut self, ctx: &egui::Context) {
@@ -126,13 +125,13 @@ impl SpacePixUi {
                                         ui.label("Both inputs must be valid dates within 7 days of eachother.  Also both vields must be filled out.");
                                         ui.label("Input Error!");
                                         if ui.button("Ok").clicked() {
-                                            self.neows_invalid_input_window_visible = false;
+                                            self.neows_ui.neows_invalid_input_window_visible = false;
                                         }
                                     });
 
                                     if ctx.input(|i| i.viewport().close_requested()) {
                                         // Tell parent viewport that we should not show next frame:
-                                        self.neows_invalid_input_window_visible = false;
+                                        self.neows_ui.neows_invalid_input_window_visible = false;
                                     }
                                 },
     );
@@ -166,14 +165,14 @@ impl SpacePixUi {
 
                 if ctx.input(|i| i.viewport().close_requested()) {
                     // Tell parent viewport that we should not show next frame:
-                    self.apod_full_window_visible = false;
+                    self.apod_ui.apod_full_window_visible = false;
                 }
             },
         );
     }
 
     fn show_apod_full(&mut self, state: bool) {
-        self.apod_full_window_visible = state;
+        self.apod_ui.apod_full_window_visible = state;
     }
 
     fn show_api_input(&mut self, ctx: &egui::Context) {
@@ -222,7 +221,7 @@ impl SpacePixUi {
                 });
                 if ctx.input(|i| i.viewport().close_requested()) {
                     // Tell parent viewport that we should not show next frame:
-                    self.api_key_input_visible = false;
+                    self.api_key.api_key_window_visible = false;
                 }
             },
         );
@@ -266,7 +265,7 @@ impl eframe::App for SpacePixUi {
 
                 ui.menu_button("Settings", |ui| {
                     if ui.button("Set API Key").clicked() {
-                        self.api_key_input_visible = true;
+                        self.api_key.api_key_window_visible = true;
                         ui.close_menu();
                     }
 
@@ -278,7 +277,7 @@ impl eframe::App for SpacePixUi {
 
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
-                        self.about_window_visible = true; // Set about_window_visible to true so on next update() it will come up.
+                        self.about.about_window_visible = true; // Set about_window_visible to true so on next update() it will come up.
                         ui.close_menu();
                     }
                 });
@@ -305,7 +304,7 @@ impl eframe::App for SpacePixUi {
                                     .on_hover_cursor(egui::CursorIcon::PointingHand)
                                     .clicked()
                                 {
-                                    self.apod_full_window_visible = true;
+                                    self.apod_ui.apod_full_window_visible = true;
                                     //self.show_apod_full(true);
                                 }
                                 ui.label(format!(
@@ -323,7 +322,7 @@ impl eframe::App for SpacePixUi {
                                     );
                                 });
 
-                                if self.apod_full_window_visible {
+                                if self.apod_ui.apod_full_window_visible {
                                     self.apod_full_window(
                                         &egui::Image::from_uri(data.hdurl.clone()),
                                         &data.title.clone(),
@@ -340,16 +339,46 @@ impl eframe::App for SpacePixUi {
             egui::Window::new("Asteroids - NeoWs").show(ctx, |ui| {
                 // NEOWS //
                 egui::Frame::default().show(ui, |ui| {
-                    let neows = NEOFeed::get_neows_feed_blocking("2024-10-01");
-                    // ui.label("Start and End dates must be within 7 days of eachother.");
-                    // ui.label("If you only want to search for one day, only enter a start date, and leave end date empty.");
-                    // ui.label("Date format: YYYY-MM-DD");
+                    match &self.neows {
+                        Some(neo) => {
+                            // // Display any NeoWs
+                            egui::ScrollArea::vertical().show(ui, |ui| {
+                                for object in neo {
+                                    if ui.link(&object.name.replace("(", "").replace(")", "")).clicked() {
+                                        match open::that(format!("https://eyes.nasa.gov/apps/asteroids/#/{}", &object.name.replace(" ", "_").replace("(", "").replace(")", "").to_lowercase())) {
+                                            Ok(_) => {},
+                                            Err(e) => { ui.label(&e.to_string()); }
+                                        }
+                                    }
 
-                    // ui.label("Start Date:");
-                    // ui.text_edit_singleline(&mut self.neows.start_date);
+                                    ui.add(egui::Label::new(format!("Asteroid Id: {}", &object.neo_reference_id)));
+                                    ui.label(format!("Near Miss Date: {}", &object.close_approach_date_full));
+                                    ui.label(format!("Distance: {} miles from Earth", &object.miss_distance.3));
+                                    ui.label(format!("Relative Velocity: {} miles per hour", object.relative_velocity.2));
+                                    ui.label(format!("Estimated Diameter: (min {} feet\nmax {} feet", object.estimated_diameter.0.0, object.estimated_diameter.0.1));
+                                    ui.label(format!("Deemed hazardous by NASA: {}", object.is_potentially_hazardous_asteroid));
+                                    ui.separator();
+                                }
+                            });
+                        }
+                        None => {
+                            //let neows = NEOFeed::get_neows_feed_blocking("2024-10-01");
+                            ui.label("Enter in a date to start your search from.");
+                            ui.label("Date format: YYYY-MM-DD");
 
-                    // ui.label("End Date:");
-                    // ui.text_edit_singleline(&mut self.neows.end_date);
+                            ui.label("Start Date:");
+                            ui.text_edit_singleline(&mut self.neows_ui.neows_date);
+                            if ui.button("Search").clicked() {
+                                match NEOFeed::get_neows_feed_blocking(&self.neows_ui.neows_date) {
+                                    Ok(neos) => self.neows = Some(neos),
+                                    Err(e) => {
+                                        ui.label(e.to_string());
+                                        self.neows = None
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     // // let mut neows_ui_data = Vec::default();
                     // if ui.button("Search").clicked() {
@@ -394,15 +423,15 @@ impl eframe::App for SpacePixUi {
                 });
             }); // NEOWS //
         });
-        if self.api_key_input_visible {
+        if self.api_key.api_key_window_visible {
             self.show_api_input(&ctx.clone());
         }
 
-        if self.neows_invalid_input_window_visible {
+        if self.neows_ui.neows_invalid_input_window_visible {
             self.show_neows_invlid_input_win(&ctx.clone());
         }
 
-        if self.about_window_visible {
+        if self.about.about_window_visible {
             self.about_window(&ctx);
         }
     }
