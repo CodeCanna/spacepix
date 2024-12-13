@@ -18,6 +18,6 @@ pub enum NeowsError {
 pub enum ApiKeyError {
     #[error("Invalid API key")]
     InvalidApiKey(),
-    #[error("Failed to save API key")]
-    KeyStore(#[from] std::io::Error)
+    #[error("Spacepix either can't find or can't access the API key file")]
+    KeyFile(#[from] std::io::Error)
 }

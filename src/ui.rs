@@ -1,5 +1,3 @@
-use crate::ApiKey;
-
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct ApodWindow {
     pub apod_window_visible: bool,
@@ -47,13 +45,15 @@ impl Default for AboutWindow {
 pub struct ApiKeyWindow {
     pub api_key_window_visible: bool,
     pub key: String,
+    pub key_set_label: String
 }
 
 impl Default for ApiKeyWindow {
     fn default() -> Self {
         Self {
             api_key_window_visible: false,
-            key: String::default()
+            key: String::default(),
+            key_set_label: String::default()
         }
     }
 }

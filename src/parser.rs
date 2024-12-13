@@ -1,5 +1,11 @@
 use crate::Urls;
+use crate::errors::ApiKeyError;
+use json::object;
+use std::{fs, path::Path};
+use std::io::{Read, Write};
 
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Parser {
     pub urls: Urls,
     key: String,
@@ -19,6 +25,28 @@ impl Parser {
         Self {
             urls: Urls::default(),
             key: key.to_string(),
+        }
+    }
+
+    pub fn set_api_key(&mut self, secret_path: &Path, key: String) -> Result<(), ApiKeyError> {
+        match fs::File::create(secret_path) {
+            Ok(mut f) => {
+                let json_buff = object! {key: key};
+                let _ = f.write(json_buff.to_string().as_bytes());
+                Ok(())
+            }
+            Err(e) => Err(ApiKeyError::KeyFile(e)),
+        }
+    }
+
+    pub fn read_key_file(mut file: fs::File) -> Result<String, ApiKeyError> {
+        let mut key = String::default();
+        match file.read_to_string(&mut key) {
+            Ok(_) => {
+                let key_json = json::from(key);
+                Ok(key_json["key"].to_string())
+            },
+            Err(e) => Err(ApiKeyError::KeyFile(e))
         }
     }
 

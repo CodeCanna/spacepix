@@ -100,6 +100,16 @@ impl Links {
     }
 }
 
+impl Default for Links {
+    fn default() -> Self {
+        Self {
+            next: String::default(),
+            previous: String::default(),
+            current: String::default()
+        }
+    }
+}
+
 /**
  * Representative of a NearEarthObject from the NASA API
  * estimated_diameter tuple key ((feet_min, feet_max), (meters_min, meters_max))
@@ -156,14 +166,25 @@ impl NearEarthObject {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct NEOFeed {
-    links: Links,
-    element_count: u8,
-    near_earth_objects: Vec<NearEarthObject>,
+    pub links: Links,
+    pub element_count: u8,
+    pub near_earth_objects: Vec<NearEarthObject>,
 }
 
 impl NEOFeed {
-    pub fn get_neows_feed_blocking(date: &str) -> Result<Vec<NearEarthObject>, NetworkError>
-    {
+    pub fn new(
+        links: Links,
+        element_count: u8,
+        near_earth_objects: Vec<NearEarthObject>
+    ) -> Self {
+        Self {
+            links,
+            element_count,
+            near_earth_objects
+        }
+    }
+
+    pub fn get_neows_feed_blocking(&mut self, date: &str) -> Result<(), NetworkError> {
         match reqwest::blocking::get(Parser::default().neows_url(date)) {
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
                 Ok(json_obj) => {
@@ -174,25 +195,88 @@ impl NEOFeed {
                             object["id"].to_string(),
                             object["neo_reference_id"].to_string(),
                             object["name"].to_string(),
-                            ((object["estimated_diameter"]["feet"]["estimated_diameter_min"].as_f32().unwrap(), object["estimated_diameter"]["feet"]["estimated_diameter_max"].as_f32().unwrap()), (object["estimated_diameter"]["meters"]["estimated_diameter_min"].as_f32().unwrap(), object["estimated_diameter"]["meters"]["estimated_diameter_max"].as_f32().unwrap())), // ((feet_min, feet_max), (meters_min, meters_max))
-                            object["is_potentially_hazardous_asteroid"].as_bool().unwrap(),
+                            (
+                                (
+                                    object["estimated_diameter"]["feet"]["estimated_diameter_min"]
+                                        .as_f32()
+                                        .unwrap(),
+                                    object["estimated_diameter"]["feet"]["estimated_diameter_max"]
+                                        .as_f32()
+                                        .unwrap(),
+                                ),
+                                (
+                                    object["estimated_diameter"]["meters"]
+                                        ["estimated_diameter_min"]
+                                        .as_f32()
+                                        .unwrap(),
+                                    object["estimated_diameter"]["meters"]
+                                        ["estimated_diameter_max"]
+                                        .as_f32()
+                                        .unwrap(),
+                                ),
+                            ), // ((feet_min, feet_max), (meters_min, meters_max))
+                            object["is_potentially_hazardous_asteroid"]
+                                .as_bool()
+                                .unwrap(),
                             object["close_approach_data"][0]["close_approach_date"].to_string(),
-                            object["close_approach_data"][0]["close_approach_date_full"].to_string(),
-                            object["close_approach_data"][0]["epoch_date_close_approach"].as_u64().unwrap(),
-                            (object["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"].to_string(), object["close_approach_data"][0]["relative_velocity"]["kilometers_per_hour"].to_string(), object["close_approach_data"][0]["relative_velocity"]["miles_per_hour"].to_string()), // (kilometers_per_second, kilometers_per_hour, miles_per_hour)
-                            (object["close_approach_data"][0]["miss_distance"]["astronomical"].to_string(), object["close_approach_data"][0]["miss_distance"]["lunar"].to_string(), object["close_approach_data"][0]["miss_distance"]["kilometers"].to_string(), object["close_approach_data"][0]["miss_distance"]["miles"].to_string()), // (astronomical, lunar, kilometers, miles)
+                            object["close_approach_data"][0]["close_approach_date_full"]
+                                .to_string(),
+                            object["close_approach_data"][0]["epoch_date_close_approach"]
+                                .as_u64()
+                                .unwrap(),
+                            (
+                                object["close_approach_data"][0]["relative_velocity"]
+                                    ["kilometers_per_second"]
+                                    .to_string(),
+                                object["close_approach_data"][0]["relative_velocity"]
+                                    ["kilometers_per_hour"]
+                                    .to_string(),
+                                object["close_approach_data"][0]["relative_velocity"]
+                                    ["miles_per_hour"]
+                                    .to_string(),
+                            ), // (kilometers_per_second, kilometers_per_hour, miles_per_hour)
+                            (
+                                object["close_approach_data"][0]["miss_distance"]["astronomical"]
+                                    .to_string(),
+                                object["close_approach_data"][0]["miss_distance"]["lunar"]
+                                    .to_string(),
+                                object["close_approach_data"][0]["miss_distance"]["kilometers"]
+                                    .to_string(),
+                                object["close_approach_data"][0]["miss_distance"]["miles"]
+                                    .to_string(),
+                            ), // (astronomical, lunar, kilometers, miles)
                             object["close_approach_data"][0]["orbiting_body"].to_string(),
-                            object["is_sentry_object"].as_bool().unwrap()
+                            object["is_sentry_object"].as_bool().unwrap(),
                         );
 
                         neo_vec.push(neo);
                     }
                     //dbg!(neo_vec);
-                    Ok(neo_vec)
+                    //Ok(neo_vec)
+                    let links = Links::new(
+                        json_obj["links"]["next"].to_string(),
+                        json_obj["links"]["previous"].to_string(),
+                        json_obj["links"]["self"].to_string(),
+                    );
+                    
+                    self.links = links;
+                    self.near_earth_objects = neo_vec;
+                    dbg!(self);
+                    Ok(())
                 }
                 Err(e) => return Err(NetworkError::JsonParseFailed(e)),
             },
-            Err(e) => return Err(NetworkError::ConnectionFailed(e))
+            Err(e) => return Err(NetworkError::ConnectionFailed(e)),
+        }
+    }
+}
+
+impl Default for NEOFeed {
+    fn default() -> Self {
+        Self {
+            links: Links::default(),
+            element_count: u8::default(),
+            near_earth_objects: Vec::default()
         }
     }
 }
