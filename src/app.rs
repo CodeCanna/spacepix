@@ -226,7 +226,7 @@ impl eframe::App for SpacePixUi {
                     }
 
                     if ui.button("APOD").clicked() {
-                        println!("APOD Settings");
+                        self.apod_ui.apod_window_visible = true; // Open APOD window
                         ui.close_menu();
                     }
 
@@ -273,7 +273,7 @@ impl eframe::App for SpacePixUi {
             // APOD //
             egui::Window::new("APOD (Astronomy Pic Of the Day)")
                 .max_height(1000.0)
-                //.open(&mut self.apod_window_visible)
+                .open(&mut self.apod_ui.apod_window_visible)
                 .show(ctx, |ui| {
                     // APOD Window //
                     egui::Frame::default().show(ui, |ui| {
@@ -308,12 +308,12 @@ impl eframe::App for SpacePixUi {
                                 });
 
                                 if self.apod_ui.apod_full_window_visible {
-                                    self.apod_full_window(
-                                        &egui::Image::from_uri(data.hdurl.clone()),
-                                        &data.title.clone(),
-                                        &data.copyright.clone(),
-                                        &ctx,
-                                    );
+                                    // self.apod_full_window(
+                                    //     &egui::Image::from_uri(data.hdurl.clone()),
+                                    //     &data.title.clone(),
+                                    //     &data.copyright.clone(),
+                                    //     &ctx,
+                                    // );
                                 }
                             }
                             None => match Apod::get_apod_data_blocking() {
