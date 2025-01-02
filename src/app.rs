@@ -16,7 +16,7 @@ pub struct SpacePixUi {
     neows_ui: NeowsWindow,
     about: AboutWindow,
     api: ApiKeyWindow,
-    parser: Parser
+    parser: Parser,
 }
 
 impl Default for SpacePixUi {
@@ -28,7 +28,7 @@ impl Default for SpacePixUi {
             neows_ui: NeowsWindow::default(),
             about: AboutWindow::default(),
             api: ApiKeyWindow::default(),
-            parser: Parser::default()
+            parser: Parser::default(),
         }
     }
 }
@@ -326,103 +326,105 @@ impl eframe::App for SpacePixUi {
                     });
                 }); // APOD //
 
-            egui::Window::new("Asteroids - NeoWs").open(&mut self.neows_ui.neows_window_visible).show(ctx, |ui| {
-                // NEOWS //
-                egui::Frame::default().show(ui, |ui| {
-                    match &self.neows {
-                        Some(neo) => {
-                            ui.label("Enter in a date to start your search from.");
-                            ui.label("Date format: YYYY-MM-DD");
+            egui::Window::new("Asteroids - NeoWs")
+                .open(&mut self.neows_ui.neows_window_visible)
+                .show(ctx, |ui| {
+                    // NEOWS //
+                    egui::Frame::default().show(ui, |ui| {
+                        match &self.neows {
+                            Some(neo) => {
+                                ui.label("Enter in a date to start your search from.");
+                                ui.label("Date format: YYYY-MM-DD");
 
-                            ui.label("Start Date:");
-                            ui.text_edit_singleline(&mut self.neows_ui.neows_date);
-                            egui::Grid::new("button_grid")
-                                .num_columns(3)
-                                .spacing([20.0, 20.0])
-                                .show(ui, |ui| {
-                                    if ui.button("Previous").clicked() {
-                                        println!("Clicked Previous");
-                                        // Set previous cache to current cache
-                                    } else if ui.button("Search").clicked() {
-                                        println!("Clicked Search");
-                                        // Load new search date
-                                    } else if ui.button("Next").clicked() {
-                                        println!("Clicked Next");
-                                        // Load the next url cache from the searched date
-                                    }
-                                });
-                            // Display any NeoWs
-                            egui::ScrollArea::vertical().show(ui, |ui| {
-                                for object in neo.near_earth_objects.clone() {
-                                    if ui
-                                        .link(&object.name.replace("(", "").replace(")", ""))
-                                        .clicked()
-                                    {
-                                        match open::that(format!(
-                                            "https://eyes.nasa.gov/apps/asteroids/#/{}",
-                                            &object
-                                                .name
-                                                .replace(" ", "_")
-                                                .replace("(", "")
-                                                .replace(")", "")
-                                                .to_lowercase()
-                                        )) {
-                                            Ok(_) => {}
-                                            Err(e) => {
-                                                ui.label(&e.to_string());
+                                ui.label("Start Date:");
+                                ui.text_edit_singleline(&mut self.neows_ui.neows_date);
+                                egui::Grid::new("button_grid")
+                                    .num_columns(3)
+                                    .spacing([20.0, 20.0])
+                                    .show(ui, |ui| {
+                                        if ui.button("Previous").clicked() {
+                                            println!("Clicked Previous");
+                                            // Set previous cache to current cache
+                                        } else if ui.button("Search").clicked() {
+                                            println!("Clicked Search");
+                                            // Load new search date
+                                        } else if ui.button("Next").clicked() {
+                                            println!("Clicked Next");
+                                            // Load the next url cache from the searched date
+                                        }
+                                    });
+                                // Display any NeoWs
+                                egui::ScrollArea::vertical().show(ui, |ui| {
+                                    for object in neo.near_earth_objects.clone() {
+                                        if ui
+                                            .link(&object.name.replace("(", "").replace(")", ""))
+                                            .clicked()
+                                        {
+                                            match open::that(format!(
+                                                "https://eyes.nasa.gov/apps/asteroids/#/{}",
+                                                &object
+                                                    .name
+                                                    .replace(" ", "_")
+                                                    .replace("(", "")
+                                                    .replace(")", "")
+                                                    .to_lowercase()
+                                            )) {
+                                                Ok(_) => {}
+                                                Err(e) => {
+                                                    ui.label(&e.to_string());
+                                                }
                                             }
                                         }
+
+                                        ui.add(egui::Label::new(format!(
+                                            "Asteroid Id: {}",
+                                            &object.neo_reference_id
+                                        )));
+                                        ui.label(format!(
+                                            "Near Miss Date: {}",
+                                            &object.close_approach_date_full
+                                        ));
+                                        ui.label(format!(
+                                            "Distance: {} miles from Earth",
+                                            &object.miss_distance.3
+                                        ));
+                                        ui.label(format!(
+                                            "Relative Velocity: {} miles per hour",
+                                            object.relative_velocity.2
+                                        ));
+                                        ui.label(format!(
+                                            "Estimated Diameter: (min {} feet\nmax {} feet",
+                                            object.estimated_diameter.0 .0,
+                                            object.estimated_diameter.0 .1
+                                        ));
+                                        ui.label(format!(
+                                            "Deemed hazardous by NASA: {}",
+                                            object.is_potentially_hazardous_asteroid
+                                        ));
+                                        ui.separator();
                                     }
+                                }); // Scroll Area
+                            }
+                            None => {
+                                let mut neows = NEOFeed::default();
+                                ui.label("Enter in a date to start your search from.");
+                                ui.label("Date format: YYYY-MM-DD");
 
-                                    ui.add(egui::Label::new(format!(
-                                        "Asteroid Id: {}",
-                                        &object.neo_reference_id
-                                    )));
-                                    ui.label(format!(
-                                        "Near Miss Date: {}",
-                                        &object.close_approach_date_full
-                                    ));
-                                    ui.label(format!(
-                                        "Distance: {} miles from Earth",
-                                        &object.miss_distance.3
-                                    ));
-                                    ui.label(format!(
-                                        "Relative Velocity: {} miles per hour",
-                                        object.relative_velocity.2
-                                    ));
-                                    ui.label(format!(
-                                        "Estimated Diameter: (min {} feet\nmax {} feet",
-                                        object.estimated_diameter.0 .0,
-                                        object.estimated_diameter.0 .1
-                                    ));
-                                    ui.label(format!(
-                                        "Deemed hazardous by NASA: {}",
-                                        object.is_potentially_hazardous_asteroid
-                                    ));
-                                    ui.separator();
-                                }
-                            }); // Scroll Area
-                        }
-                        None => {
-                            let mut neows = NEOFeed::default();
-                            ui.label("Enter in a date to start your search from.");
-                            ui.label("Date format: YYYY-MM-DD");
-
-                            ui.label("Start Date:");
-                            ui.text_edit_singleline(&mut self.neows_ui.neows_date);
-                            if ui.button("Search").clicked() {
-                                match neows.get_neows_feed_blocking(&self.neows_ui.neows_date) {
-                                    Ok(neos) => self.neows = Some(neows),
-                                    Err(e) => {
-                                        ui.label(e.to_string());
-                                        self.neows = None
+                                ui.label("Start Date:");
+                                ui.text_edit_singleline(&mut self.neows_ui.neows_date);
+                                if ui.button("Search").clicked() {
+                                    match neows.get_neows_feed_blocking(&self.neows_ui.neows_date) {
+                                        Ok(neos) => self.neows = Some(neows),
+                                        Err(e) => {
+                                            ui.label(e.to_string());
+                                            self.neows = None
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                });
-            }); // NEOWS //
+                    });
+                }); // NEOWS //
         });
         if self.api.api_key_window_visible {
             self.show_api_input(&ctx.clone());
