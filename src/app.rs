@@ -232,7 +232,6 @@ impl eframe::App for SpacePixUi {
 
                     if ui.button("Asteroids - NeoWs").clicked() {
                         self.neows_ui.neows_window_visible = true; // Open NEOWs window
-                        println!("NeoWs Settings");
                         ui.close_menu();
                     }
 
