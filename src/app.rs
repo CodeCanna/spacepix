@@ -270,10 +270,11 @@ impl eframe::App for SpacePixUi {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            let mut apod_window_visible = self.apod_ui.apod_window_visible;
             // APOD //
             egui::Window::new("APOD (Astronomy Pic Of the Day)")
                 .max_height(1000.0)
-                .open(&mut self.apod_ui.apod_window_visible)
+                .open(&mut apod_window_visible)
                 .show(ctx, |ui| {
                     // APOD Window //
                     egui::Frame::default().show(ui, |ui| {
@@ -308,12 +309,12 @@ impl eframe::App for SpacePixUi {
                                 });
 
                                 if self.apod_ui.apod_full_window_visible {
-                                    // self.apod_full_window(
-                                    //     &egui::Image::from_uri(data.hdurl.clone()),
-                                    //     &data.title.clone(),
-                                    //     &data.copyright.clone(),
-                                    //     &ctx,
-                                    // );
+                                    self.apod_full_window(
+                                        &egui::Image::from_uri(data.hdurl.clone()),
+                                        &data.title.clone(),
+                                        &data.copyright.clone(),
+                                        &ctx,
+                                    );
                                 }
                             }
                             None => match Apod::get_apod_data_blocking() {
@@ -325,6 +326,7 @@ impl eframe::App for SpacePixUi {
                         }
                     });
                 }); // APOD //
+                self.apod_ui.apod_window_visible = apod_window_visible;
 
             egui::Window::new("Asteroids - NeoWs")
                 .open(&mut self.neows_ui.neows_window_visible)
