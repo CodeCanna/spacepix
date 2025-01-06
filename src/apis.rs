@@ -251,8 +251,7 @@ impl NEOFeed {
 
                         neo_vec.push(neo);
                     }
-                    //dbg!(neo_vec);
-                    //Ok(neo_vec)
+
                     let links = Links::new(
                         json_obj["links"]["next"].to_string(),
                         json_obj["links"]["previous"].to_string(),
@@ -261,7 +260,6 @@ impl NEOFeed {
                     
                     self.links = links;
                     self.near_earth_objects = neo_vec;
-                    dbg!(self);
                     Ok(())
                 }
                 Err(e) => return Err(NetworkError::JsonParseFailed(e)),
