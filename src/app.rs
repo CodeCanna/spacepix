@@ -270,11 +270,11 @@ impl eframe::App for SpacePixUi {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            let mut apod_window_visible = self.apod_ui.apod_window_visible;
+            let mut apod_window_visible = self.apod_ui.apod_window_visible; // Set a local variable to I don't have to use self with .open() below
             // APOD //
             egui::Window::new("APOD (Astronomy Pic Of the Day)")
                 .max_height(1000.0)
-                .open(&mut apod_window_visible)
+                .open(&mut apod_window_visible) // This doesn't need to be &mut self.apod_ui_apod_window_visible
                 .show(ctx, |ui| {
                     // APOD Window //
                     egui::Frame::default().show(ui, |ui| {
