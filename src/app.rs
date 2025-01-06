@@ -395,7 +395,7 @@ impl eframe::App for SpacePixUi {
                                             object.relative_velocity.2
                                         ));
                                         ui.label(format!(
-                                            "Estimated Diameter: (min {} feet\nmax {} feet",
+                                            "Estimated Diameter: (min {} feet\nmax {} feet)",
                                             object.estimated_diameter.0 .0,
                                             object.estimated_diameter.0 .1
                                         ));
