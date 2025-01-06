@@ -322,7 +322,7 @@ impl eframe::App for SpacePixUi {
                                 Err(e) => {
                                     ui.label("Network Error");
                                 }
-                            }, // self.apod = Some(Apod::get_apod_data_blocking()),
+                            },
                         }
                     });
                 }); // APOD //
