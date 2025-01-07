@@ -122,40 +122,6 @@ impl SpacePixUi {
     );
     }
 
-    fn apod_full_window(
-        &mut self,
-        img: &Image,
-        image_name: &String,
-        image_credit: &String,
-        ctx: &egui::Context,
-    ) {
-        ctx.show_viewport_immediate(
-            egui::ViewportId::from_hash_of("apod_viewport"),
-            egui::ViewportBuilder::default()
-                .with_title(format!(
-                    "{} (By {})",
-                    &image_name,
-                    &image_credit.replace("\n", "")
-                ))
-                .with_maximized(true),
-            |ctx, class| {
-                assert!(
-                    class == egui::ViewportClass::Immediate,
-                    "This egui backend doesn't support multiple viewports"
-                );
-
-                egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.image(img.source(ctx));
-                });
-
-                if ctx.input(|i| i.viewport().close_requested()) {
-                    // Tell parent viewport that we should not show next frame:
-                    self.apod_ui.apod_full_window_visible = false;
-                }
-            },
-        );
-    }
-
     fn show_apod_full(&mut self, state: bool) {
         self.apod_ui.apod_full_window_visible = state;
     }
@@ -309,7 +275,7 @@ impl eframe::App for SpacePixUi {
                                 });
 
                                 if self.apod_ui.apod_full_window_visible {
-                                    self.apod_full_window(
+                                    self.apod_ui.apod_full_window(
                                         &egui::Image::from_uri(data.hdurl.clone()),
                                         &data.title.clone(),
                                         &data.copyright.clone(),

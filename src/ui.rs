@@ -1,3 +1,5 @@
+use egui::Image;
+
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct ApodWindow {
     pub apod_window_visible: bool,
@@ -10,6 +12,42 @@ impl Default for ApodWindow {
             apod_window_visible: false,
             apod_full_window_visible: false
         }
+    }
+}
+
+impl ApodWindow {
+    pub fn apod_full_window(
+        &mut self,
+        img: &Image,
+        image_name: &String,
+        image_credit: &String,
+        ctx: &egui::Context,
+    ) {
+        ctx.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("apod_viewport"),
+            egui::ViewportBuilder::default()
+                .with_title(format!(
+                    "{} (By {})",
+                    &image_name,
+                    &image_credit.replace("\n", "")
+                ))
+                .with_maximized(true),
+            |ctx, class| {
+                assert!(
+                    class == egui::ViewportClass::Immediate,
+                    "This egui backend doesn't support multiple viewports"
+                );
+
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.image(img.source(ctx));
+                });
+
+                if ctx.input(|i| i.viewport().close_requested()) {
+                    // Tell parent viewport that we should not show next frame:
+                    self.apod_full_window_visible = false;
+                }
+            },
+        );
     }
 }
 
