@@ -21,10 +21,10 @@ impl Default for Parser {
 }
 
 impl Parser {
-    pub fn new(key: &str) -> Self {
+    pub fn new(key: String) -> Self {
         Self {
             urls: Urls::default(),
-            key: key.to_string(),
+            key,
         }
     }
 

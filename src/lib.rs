@@ -1,6 +1,6 @@
 mod apis;
 mod app;
-mod errors;
+pub mod errors;
 mod urls;
 mod parser;
 mod ui;
@@ -9,3 +9,4 @@ pub use app::SpacePixUi;
 pub use urls::Urls;
 pub use parser::Parser;
 pub use ui::{ApodWindow, NeowsWindow};
+pub use errors::{ApiKeyError, NetworkError};
