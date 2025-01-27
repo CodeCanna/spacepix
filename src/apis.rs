@@ -65,7 +65,7 @@ impl Apod {
     }
 
     pub fn get_apod_data_blocking() -> Result<Self, NetworkError> {
-        match reqwest::blocking::get(Parser::default().apod_url()) {
+        match reqwest::blocking::get(Parser::default().apod_url().replace("\"", "")) { // .replace to get rid of the extra quotes from the URL
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
                 Ok(json_obj) => Ok(Self {
                     copyright: json_obj["copyright"].to_string(),
