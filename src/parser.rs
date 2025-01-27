@@ -5,7 +5,7 @@ use std::{fs, path::Path};
 use std::io::{Read, Write};
 
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, std::fmt::Debug)]
 pub struct Parser {
     pub urls: Urls,
     key: String,
@@ -15,7 +15,10 @@ impl Default for Parser {
     fn default() -> Self {
         Self {
             urls: Urls::default(),
-            key: String::from("DEMO_KEY"),
+            key: {
+                println!("{}", Self::read_key_file(fs::File::open("secret.json").unwrap()).unwrap());
+                Self::read_key_file(fs::File::open("secret.json").unwrap()).unwrap()
+            },
         }
     }
 }
@@ -43,7 +46,8 @@ impl Parser {
         let mut key = String::default();
         match file.read_to_string(&mut key) {
             Ok(_) => {
-                let key_json = json::from(key);
+                // let key_json = json::from(key);
+                let key_json: serde_json::Value = serde_json::from_str(&key.as_str()).unwrap();
                 Ok(key_json["key"].to_string())
             },
             Err(e) => Err(ApiKeyError::KeyFile(e))
@@ -63,6 +67,10 @@ impl Parser {
                 .replace("END_DATE", date),
             self.key
         )
+    }
+
+    pub fn get_api_key(&self) -> String {
+        self.key.clone()
     }
 }
 
