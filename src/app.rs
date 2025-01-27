@@ -44,6 +44,7 @@ impl SpacePixUi {
             return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
         }
 
+        println!("{}", &parser.get_api_key());
         
         Self {
             parser,
