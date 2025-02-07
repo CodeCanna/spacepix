@@ -184,13 +184,15 @@ impl NEOFeed {
         }
     }
 
-    pub fn get_neows_feed_blocking(&mut self, date: &str) -> Result<(), NetworkError> {
-        match reqwest::blocking::get(Parser::default().neows_url(date)) {
+    pub fn get_neows_feed_blocking(&mut self, date: &str) -> Result<&mut NEOFeed, NetworkError> {
+        match reqwest::blocking::get(Parser::default().neows_url(date).replace("\"", "")) {
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
                 Ok(json_obj) => {
+                    // dbg!("{:?}", &json_obj);
                     let neo_objects_json = json_obj["near_earth_objects"][date].members();
                     let mut neo_vec: Vec<NearEarthObject> = Vec::default();
                     for object in neo_objects_json {
+                        println!("Bean!");
                         let neo = NearEarthObject::new(
                             object["id"].to_string(),
                             object["neo_reference_id"].to_string(),
@@ -252,6 +254,8 @@ impl NEOFeed {
                         neo_vec.push(neo);
                     }
 
+                    dbg!(&neo_vec);
+
                     let links = Links::new(
                         json_obj["links"]["next"].to_string(),
                         json_obj["links"]["previous"].to_string(),
@@ -260,7 +264,7 @@ impl NEOFeed {
                     
                     self.links = links;
                     self.near_earth_objects = neo_vec;
-                    Ok(())
+                    Ok(self)
                 }
                 Err(e) => return Err(NetworkError::JsonParseFailed(e)),
             },

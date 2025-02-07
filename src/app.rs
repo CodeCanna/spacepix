@@ -387,7 +387,11 @@ impl eframe::App for SpacePixUi {
                                 ui.text_edit_singleline(&mut self.neows_ui.neows_date);
                                 if ui.button("Search").clicked() {
                                     match neows.get_neows_feed_blocking(&self.neows_ui.neows_date) {
-                                        Ok(neos) => self.neows = Some(neows),
+                                        Ok(_) => {
+                                            self.neows = Some(neows);
+                                            println!("{:?}", self.neows);
+                                            println!("Bean!!");
+                                        },
                                         Err(e) => {
                                             ui.label(e.to_string());
                                             self.neows = None
