@@ -184,6 +184,7 @@ impl NEOFeed {
         }
     }
 
+    // Retrieve a list of Near Earth Objects from NASA and return a result with the list or error
     pub fn get_neows_feed_blocking(&mut self, date: &str) -> Result<&mut NEOFeed, NetworkError> {
         match reqwest::blocking::get(Parser::default().neows_url(date).replace("\"", "")) {
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
