@@ -92,7 +92,23 @@ impl SpacePixUi {
                         egui::Image::new(egui::include_image!("../spacepix.png")).max_size(vec2(100.0, 100.0))
                     );
                     ui.heading("Spacepix");
-                    ui.label("Creator & Maintainer: Mark A Waid Jr - mark.waid94@gmail.com");
+                    if ui.link("Github").clicked() {
+                        match open::that("https://github.com/CodeCanna/spacepix") {
+                            Ok(_) => {}
+                            Err(_) => {
+                                ui.label("Failed to open web browser.");
+                            }
+                        }
+                    }
+                    ui.label("Creator & Maintainer: Mark A Waid Jr - ");
+                    if ui.link("mark.waid94@gmail.com").clicked() {
+                        match open::that("mailto:mark.waid94@gmail.com") {
+                            Ok(_) => {}
+                            Err(_) => {
+                                ui.label("Failed to open browser");
+                            }
+                        }
+                    }
                     ui.label("License: GNU");
                 });
 
