@@ -16,7 +16,7 @@ impl Default for Parser {
         Self {
             urls: Urls::default(),
             key: {
-                println!("{}", Self::read_key_file(fs::File::open("secret.json").unwrap()).unwrap());
+                // println!("{}", Self::read_key_file(fs::File::open("secret.json").unwrap()).unwrap());
                 Self::read_key_file(fs::File::open("secret.json").unwrap()).unwrap()
             },
         }

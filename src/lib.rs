@@ -9,5 +9,5 @@ pub use apis::*;
 pub use app::SpacePixUi;
 pub use urls::Urls;
 pub use parser::Parser;
-pub use ui::{ApodWindow, NeowsWindow};
+pub use ui::{ApodWindow, NeowsWindow, NIVLWindow};
 pub use errors::{ApiKeyError, NetworkError};

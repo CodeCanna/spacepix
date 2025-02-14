@@ -69,6 +69,21 @@ impl Default for NeowsWindow {
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct NIVLWindow {
+    pub query: String,
+    pub nivl_window_visible: bool
+}
+
+impl Default for NIVLWindow {
+    fn default() -> Self {
+        Self {
+            query: String::default(),
+            nivl_window_visible: false
+        }
+    }
+}
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct AboutWindow {
     pub about_window_visible: bool,
 }

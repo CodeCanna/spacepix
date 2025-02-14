@@ -1,7 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 use egui;
-use spacepix::{ApiKeyError, Parser, SpacePixUi};
+use spacepix::Parser;
 use std::{fs, io::Read};
+
+const SECRET: &str = "secret.json";
 
 fn load_icon(path: &str) -> egui::IconData {
     let (icon_rgba, icon_width, icon_height) = {
@@ -30,13 +32,12 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
 
-    match fs::File::open("secret.json") {
+    match fs::File::open(&SECRET) {
         Ok(mut f) => {
             let mut key = String::default();
             f.read_to_string(&mut key).unwrap();
             let key_json: serde_json::Value = serde_json::from_str(&key.as_str()).unwrap();//json::from(key);
             let parser = Parser::new(key_json["key"].to_string());
-            // println!("{}", &parser.get_api_key());
             Ok(eframe::run_native(
             "Space Pix",
             native_options,

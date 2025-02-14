@@ -193,7 +193,6 @@ impl NEOFeed {
                     let neo_objects_json = json_obj["near_earth_objects"][date].members();
                     let mut neo_vec: Vec<NearEarthObject> = Vec::default();
                     for object in neo_objects_json {
-                        println!("Bean!");
                         let neo = NearEarthObject::new(
                             object["id"].to_string(),
                             object["neo_reference_id"].to_string(),
@@ -251,11 +250,8 @@ impl NEOFeed {
                             object["close_approach_data"][0]["orbiting_body"].to_string(),
                             object["is_sentry_object"].as_bool().unwrap(),
                         );
-
                         neo_vec.push(neo);
                     }
-
-                    dbg!(&neo_vec);
 
                     let links = Links::new(
                         json_obj["links"]["next"].to_string(),
@@ -284,8 +280,16 @@ impl Default for NEOFeed {
     }
 }
 
-#[allow(dead_code)]
-struct DONKI {}
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct NIVL {
+
+}
+
+impl Default for NIVL {
+    fn default() -> Self {
+        Self {}
+    }
+}
 
 #[cfg(test)]
 mod tests {

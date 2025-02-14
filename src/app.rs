@@ -1,7 +1,9 @@
 use crate::ui::{AboutWindow, ApiKeyWindow};
-use crate::{Apod, ApodWindow, NEOFeed, NeowsWindow, Parser};
-use eframe::egui::{FontId, RichText};
-use egui::Image;
+use crate::{Apod, ApodWindow, NEOFeed, NIVLWindow, NeowsWindow, Parser, NIVL};
+use eframe::egui::{FontId, RichText, Image};
+use egui::load::ImageLoader;
+use egui::{vec2, ImageSource};
+// use egui::ImageSource;
 use std::path;
 
 // This is the object that the view port will represent
@@ -12,8 +14,10 @@ use std::path;
 pub struct SpacePixUi {
     apod: Option<Apod>,
     neows: Option<NEOFeed>,
+    nivl: Option<NIVL>,
     apod_ui: ApodWindow,
     neows_ui: NeowsWindow,
+    nivl_ui: NIVLWindow,
     about: AboutWindow,
     api: ApiKeyWindow,
     parser: Parser,
@@ -24,8 +28,10 @@ impl Default for SpacePixUi {
         Self {
             apod: None,
             neows: None,
+            nivl: None,
             apod_ui: ApodWindow::default(),
             neows_ui: NeowsWindow::default(),
+            nivl_ui: NIVLWindow::default(),
             about: AboutWindow::default(),
             api: ApiKeyWindow::default(),
             parser: Parser::default(),
@@ -35,6 +41,7 @@ impl Default for SpacePixUi {
 
 impl SpacePixUi {
     pub fn new(cc: &eframe::CreationContext<'_>, parser: Parser) -> Self {
+        egui_extras::install_image_loaders(&cc.egui_ctx);
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
@@ -44,8 +51,8 @@ impl SpacePixUi {
             return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
         }
 
-        println!("{}", &parser.get_api_key());
-        
+        // cc.egui_ctx.set_visuals();
+
         Self {
             parser,
             ..Default::default()
@@ -81,6 +88,9 @@ impl SpacePixUi {
                 );
 
                 egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.add(
+                        egui::Image::new(egui::include_image!("../spacepix.png")).max_size(vec2(100.0, 100.0))
+                    );
                     ui.heading("Spacepix");
                     ui.label("Creator & Maintainer: Mark A Waid Jr - mark.waid94@gmail.com");
                     ui.label("License: GNU");
@@ -94,6 +104,7 @@ impl SpacePixUi {
         );
     }
 
+    #[allow(dead_code)]
     fn show_about(&mut self, state: bool) {
         self.about.about_window_visible = state;
     }
@@ -127,6 +138,7 @@ impl SpacePixUi {
     );
     }
 
+    #[allow(dead_code)]
     fn show_apod_full(&mut self, state: bool) {
         self.apod_ui.apod_full_window_visible = state;
     }
@@ -187,7 +199,6 @@ impl SpacePixUi {
 impl eframe::App for SpacePixUi {
     #[allow(unused_variables)]
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        egui_extras::install_image_loaders(&ctx);
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -206,8 +217,8 @@ impl eframe::App for SpacePixUi {
                         ui.close_menu();
                     }
 
-                    if ui.button("DONKI").clicked() {
-                        println!("DONKI Settings");
+                    if ui.button("NASA Image and Video Library").clicked() {
+                        self.nivl_ui.nivl_window_visible = true;
                         ui.close_menu();
                     }
 
@@ -225,10 +236,19 @@ impl eframe::App for SpacePixUi {
                         ui.close_menu();
                     }
 
-                    if ui.button("Theme").clicked() {
-                        println!("Theme button clicked!");
-                        ui.close_menu();
-                    }
+                    ui.menu_button("Theme", |ui| {
+                        if ui.button("Dark").clicked() {
+                            println!("Set Dark Theme");
+                            // egui::style::Visuals::dark();
+                            ui.visuals_mut().dark_mode = true;
+                        }
+
+                        if ui.button("Light").clicked() {
+                            println!("Set Light Theme");
+                            // egui::style::Visuals::light();
+                            ui.visuals_mut().dark_mode = false;
+                        }
+                    });
                 });
 
                 ui.menu_button("Help", |ui| {
@@ -242,7 +262,7 @@ impl eframe::App for SpacePixUi {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let mut apod_window_visible = self.apod_ui.apod_window_visible; // Set a local variable to I don't have to use self with .open() below
-            // APOD //
+                                                                            // APOD //
             egui::Window::new("APOD (Astronomy Pic Of the Day)")
                 .max_height(1000.0)
                 .open(&mut apod_window_visible) // This doesn't need to be &mut self.apod_ui_apod_window_visible
@@ -297,7 +317,7 @@ impl eframe::App for SpacePixUi {
                         }
                     });
                 }); // APOD //
-                self.apod_ui.apod_window_visible = apod_window_visible;
+            self.apod_ui.apod_window_visible = apod_window_visible;
 
             egui::Window::new("Asteroids - NeoWs")
                 .open(&mut self.neows_ui.neows_window_visible)
@@ -389,9 +409,7 @@ impl eframe::App for SpacePixUi {
                                     match neows.get_neows_feed_blocking(&self.neows_ui.neows_date) {
                                         Ok(_) => {
                                             self.neows = Some(neows);
-                                            println!("{:?}", self.neows);
-                                            println!("Bean!!");
-                                        },
+                                        }
                                         Err(e) => {
                                             ui.label(e.to_string());
                                             self.neows = None
@@ -402,6 +420,15 @@ impl eframe::App for SpacePixUi {
                         }
                     });
                 }); // NEOWS //
+
+            egui::Window::new("NASA Image and Video Library")
+                .open(&mut self.nivl_ui.nivl_window_visible)
+                .show(ctx, |ui| {
+                    egui::Frame::default().show(ui, |ui| {
+                        ui.label("Enter a search term");
+                        ui.text_edit_singleline(&mut self.nivl_ui.query);
+                    })
+                }); // NIVL
         });
         if self.api.api_key_window_visible {
             self.show_api_input(&ctx.clone());

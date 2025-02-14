@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::usize;
 
-// NASA URLs
+// NASA API URLs
 const APOD: &str = "https://api.nasa.gov/planetary/apod?api_key=";
 const NEOWS: &str = "https://api.nasa.gov/neo/rest/v1/feed?start_date=START_DATE&end_date=END_DATE&api_key=";
 const DONKI: &str = "https://api.nasa.gov/DONKI/CME?startDate=yyyy-MM-dd&endDate=yyyy-MM-dd&api_key=";
