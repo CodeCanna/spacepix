@@ -1,6 +1,6 @@
 use crate::ui::{AboutWindow, ApiKeyWindow};
 use crate::{Apod, ApodWindow, NEOFeed, NIVLWindow, NeowsWindow, Parser, NIVL};
-use eframe::egui::{FontId, RichText, Image};
+use eframe::egui::{FontId, Image, RichText};
 use egui::load::ImageLoader;
 use egui::{vec2, ImageSource};
 // use egui::ImageSource;
@@ -89,7 +89,8 @@ impl SpacePixUi {
 
                 egui::CentralPanel::default().show(ctx, |ui| {
                     ui.add(
-                        egui::Image::new(egui::include_image!("../spacepix.png")).max_size(vec2(100.0, 100.0))
+                        egui::Image::new(egui::include_image!("../spacepix.png"))
+                            .max_size(vec2(100.0, 100.0)),
                     );
                     ui.heading("Spacepix");
                     if ui.link("Github").clicked() {
@@ -339,29 +340,43 @@ impl eframe::App for SpacePixUi {
                 .open(&mut self.neows_ui.neows_window_visible)
                 .show(ctx, |ui| {
                     // NEOWS //
+                    let mut next_search: Option<NEOFeed> = None;
                     egui::Frame::default().show(ui, |ui| {
+                        ui.label("Enter in a date to start your search from.");
+                        ui.label("Date format: YYYY-MM-DD");
+
+                        ui.label("Start Date:");
+                        ui.text_edit_singleline(&mut self.neows_ui.neows_date);
+                        egui::Grid::new("button_grid")
+                            .num_columns(3)
+                            .spacing([20.0, 20.0])
+                            .show(ui, |ui| {
+                                if ui.button("Previous").clicked() {
+                                    println!("Clicked Previous");
+                                    // Set previous cache to current cache
+                                } else if ui.button("Search").clicked() {
+                                    println!("Clicked Search");
+                                    let mut neows = NEOFeed::default();
+                                    match neows.get_neows_feed_blocking(&self.neows_ui.neows_date) {
+                                        Ok(_) => {
+                                            // next_search = Some(neows);
+                                            self.neows = Some(neows);
+                                            dbg!(&next_search);
+                                        }
+                                        Err(e) => {
+                                            ui.label(e.to_string());
+                                            next_search = None
+                                        }
+                                    }
+
+                                    // Load new search date
+                                } else if ui.button("Next").clicked() {
+                                    println!("Clicked Next");
+                                    // Load the next url cache from the searched date
+                                }
+                            });
                         match &self.neows {
                             Some(neo) => {
-                                ui.label("Enter in a date to start your search from.");
-                                ui.label("Date format: YYYY-MM-DD");
-
-                                ui.label("Start Date:");
-                                ui.text_edit_singleline(&mut self.neows_ui.neows_date);
-                                egui::Grid::new("button_grid")
-                                    .num_columns(3)
-                                    .spacing([20.0, 20.0])
-                                    .show(ui, |ui| {
-                                        if ui.button("Previous").clicked() {
-                                            println!("Clicked Previous");
-                                            // Set previous cache to current cache
-                                        } else if ui.button("Search").clicked() {
-                                            println!("Clicked Search");
-                                            // Load new search date
-                                        } else if ui.button("Next").clicked() {
-                                            println!("Clicked Next");
-                                            // Load the next url cache from the searched date
-                                        }
-                                    });
                                 // Display any NeoWs
                                 egui::ScrollArea::vertical().show(ui, |ui| {
                                     for object in neo.near_earth_objects.clone() {
@@ -413,25 +428,11 @@ impl eframe::App for SpacePixUi {
                                         ui.separator();
                                     }
                                 }); // Scroll Area
+                                // self.neows = next_search;
                             }
                             None => {
-                                let mut neows = NEOFeed::default();
-                                ui.label("Enter in a date to start your search from.");
-                                ui.label("Date format: YYYY-MM-DD");
-
-                                ui.label("Start Date:");
-                                ui.text_edit_singleline(&mut self.neows_ui.neows_date);
-                                if ui.button("Search").clicked() {
-                                    match neows.get_neows_feed_blocking(&self.neows_ui.neows_date) {
-                                        Ok(_) => {
-                                            self.neows = Some(neows);
-                                        }
-                                        Err(e) => {
-                                            ui.label(e.to_string());
-                                            self.neows = None
-                                        }
-                                    }
-                                }
+                                self.neows = next_search;
+                                // dbg!(&self.neows);
                             }
                         }
                     });
