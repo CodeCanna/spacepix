@@ -1,9 +1,7 @@
 use crate::ui::{AboutWindow, ApiKeyWindow};
 use crate::{Apod, ApodWindow, NEOFeed, NIVLWindow, NeowsWindow, Parser, NIVL};
-use eframe::egui::{FontId, Image, RichText};
-use egui::load::ImageLoader;
-use egui::{vec2, ImageSource};
-// use egui::ImageSource;
+use eframe::egui::{FontId, RichText};
+use egui::vec2;
 use std::path;
 
 // This is the object that the view port will represent
@@ -381,7 +379,14 @@ impl eframe::App for SpacePixUi {
                                 egui::ScrollArea::vertical().show(ui, |ui| {
                                     for object in neo.near_earth_objects.clone() {
                                         if ui
-                                            .link(&object.name.replace("(", "").replace(")", ""))
+                                            .link(
+                                                egui::RichText::new(
+                                                    &object.name.replace("(", "").replace(")", ""),
+                                                )
+                                                .size(30.0)
+                                                .strong()
+                                                .color(egui::Color32::from_rgb(0, 50, 255)),
+                                            )
                                             .clicked()
                                         {
                                             match open::that(format!(
@@ -400,14 +405,31 @@ impl eframe::App for SpacePixUi {
                                             }
                                         }
 
-                                        ui.add(egui::Label::new(format!(
-                                            "Asteroid Id: {}",
-                                            &object.neo_reference_id
-                                        )));
-                                        ui.label(format!(
-                                            "Near Miss Date: {}",
-                                            &object.close_approach_date_full
-                                        ));
+                                        // ui.add(egui::Label::new(format!(
+                                        //     "Asteroid Id: {}",
+                                        //     &object.neo_reference_id
+                                        // )));
+                                        ui.label(
+                                            egui::RichText::new(format!(
+                                                "Asteroid Id: {}",
+                                                &object.neo_reference_id
+                                            ))
+                                            .size(15.0)
+                                            .strong(),
+                                        );
+
+                                        // ui.label(format!(
+                                        //     "Near Miss Date: {}",
+                                        //     &object.close_approach_date_full
+                                        // ));
+                                        ui.label(
+                                            egui::RichText::new(format!(
+                                                "Near Miss Date: {}",
+                                                &object.close_approach_date_full
+                                            ))
+                                            .size(15.0)
+                                            .strong(),
+                                        );
                                         ui.label(format!(
                                             "Distance: {} miles from Earth",
                                             &object.miss_distance.3
@@ -428,11 +450,10 @@ impl eframe::App for SpacePixUi {
                                         ui.separator();
                                     }
                                 }); // Scroll Area
-                                // self.neows = next_search;
+                                    // self.neows = next_search;
                             }
                             None => {
                                 self.neows = next_search;
-                                // dbg!(&self.neows);
                             }
                         }
                     });
