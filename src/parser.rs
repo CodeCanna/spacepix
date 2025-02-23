@@ -76,11 +76,15 @@ impl Parser {
 
 #[cfg(test)]
 mod tests {
+    use crate::Parser;
+
+    #[test]
     fn test_apod_url() {
-        todo!()
+        assert_eq!(Parser::new(String::from("DEMO_KEY")).apod_url(), "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY");
     }
 
+    #[test]
     fn test_neows_url() {
-        todo!()
+        assert_eq!(Parser::new(String::from("DEMO_KEY")).neows_url("2020-10-10"), "https://api.nasa.gov/neo/rest/v1/feed?start_date=2020-10-10&end_date=2020-10-10&api_key=DEMO_KEY");
     }
 }
