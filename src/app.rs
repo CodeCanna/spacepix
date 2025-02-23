@@ -481,21 +481,3 @@ impl eframe::App for SpacePixUi {
         }
     }
 }
-// beans
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_get_neows_data_blocking() {
-        todo!()
-    }
-
-    #[test]
-    fn test_get_apod_data_blocking() {
-        todo!()
-    }
-
-    #[test]
-    fn test_set_api_key() {
-        todo!()
-    }
-}
